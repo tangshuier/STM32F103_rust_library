@@ -1,0 +1,2 @@
+# STM32F103_rust_library
+为STM32F103芯片系列开发的rust语言的标准库，可以让标准库用户更加简单的更换到rust开发而无需学习hal库
