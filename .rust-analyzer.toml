@@ -1,0 +1,4 @@
+[rust-analyzer]
+check = { command = ["cargo", "check", "--bin", "rust-bsp-base"] }
+cargo = { target = "thumbv7m-none-eabi" }
+procMacro = { enable = true }

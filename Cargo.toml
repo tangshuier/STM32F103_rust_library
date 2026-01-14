@@ -1,0 +1,41 @@
+[package]
+name = "rust-bsp-base"
+version = "0.1.0"
+authors = ["Your Name <your.email@example.com>"]
+edition = "2021"
+
+[dependencies]
+cortex-m = "0.7"
+cortex-m-rt = "0.7"
+panic-halt = "0.2"
+heapless = "0.7"
+stm32f103 = { path = "src/library" }
+
+[build-dependencies]
+cc = "1.0"
+bindgen = "0.60"
+
+[[bin]]
+name = "rust-bsp-base"
+test = false
+bench = false
+doc = false
+
+[target.thumbv7m-none-eabi]
+rustflags = [
+    "-C", "link-arg=-Tconfig/link.x"
+]
+
+
+
+[profile.dev]
+debug = true
+opt-level = 0
+panic = "abort"
+
+[profile.release]
+debug = false
+opt-level = "z"
+codegen-units = 1
+lto = true
+panic = "abort"
