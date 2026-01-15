@@ -667,8 +667,8 @@ impl RccDriver {
         
         // 配置USB预分频器
         let mut value = rcc.cfgr().read().bits();
-        // 清除USBPRE位
-        value &= !0x10000;
+        // 清除USBPRE位（位22）
+        value &= !0x400000;
         
         // USB时钟频率 = PLL时钟 / USBPRE
         // 如果PLL时钟为72MHz，则USBPRE=1，USB时钟=72/1.5=48MHz
@@ -678,10 +678,10 @@ impl RccDriver {
             let pll_clock = self.get_system_clock_frequency();
             if pll_clock == 72_000_000 {
                 // USBPRE=1，USB时钟=72/1.5=48MHz
-                value |= 0x10000;
+                value |= 0x400000;
             } else if pll_clock == 96_000_000 {
                 // USBPRE=0，USB时钟=96/2=48MHz
-                value &= !0x10000;
+                value &= !0x400000;
             }
         }
         
@@ -695,30 +695,30 @@ impl RccDriver {
         
         // 配置ADC预分频器
         let mut value = rcc.cfgr().read().bits();
-        // 清除ADCPRE位
-        value &= !0xC00000;
+        // 清除ADCPRE位（位14-15）
+        value &= !0xC000;
         
         // 设置ADCPRE位
         match prescaler {
             2 => {
                 // ADC时钟 = PCLK2 / 2
-                value |= 0x000000;
+                value |= 0x0000;
             }
             4 => {
                 // ADC时钟 = PCLK2 / 4
-                value |= 0x400000;
+                value |= 0x4000;
             }
             6 => {
                 // ADC时钟 = PCLK2 / 6
-                value |= 0x800000;
+                value |= 0x8000;
             }
             8 => {
                 // ADC时钟 = PCLK2 / 8
-                value |= 0xC00000;
+                value |= 0xC000;
             }
             _ => {
                 // 默认使用2分频
-                value |= 0x000000;
+                value |= 0x0000;
             }
         }
         
