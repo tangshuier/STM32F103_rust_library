@@ -20,7 +20,7 @@ pub mod rcc;
 // pub mod serial;
 // pub mod spi;
 // pub mod system;
-// pub mod timer;
+pub mod timer;
 // pub mod wwdg;
 // pub mod cec;
 // pub mod dbg;

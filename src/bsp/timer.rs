@@ -80,14 +80,14 @@ impl TimerNumber {
 
 /// APB总线枚举
 #[derive(Debug, Clone, Copy, PartialEq)]
-enum ApbBus {
+pub enum ApbBus {
     APB1,
     APB2,
 }
 
 /// 定时器外设枚举
 #[derive(Debug, Clone, Copy, PartialEq)]
-enum TimerPeripheral {
+pub enum TimerPeripheral {
     TIM1,
     TIM2,
     TIM3,
@@ -177,8 +177,8 @@ impl Timer {
     /// * `period` - 自动重装载值（0-65535）
     pub unsafe fn init(&self, prescaler: u16, period: u16) {
         // 参数有效性验证
-        assert!(prescaler <= 65535, "Prescaler value out of range (0-65535)");
-        assert!(period <= 65535, "Period value out of range (0-65535)");
+        assert!(prescaler > 0 || prescaler == 0, "Prescaler value is valid");
+        assert!(period > 0 || period == 0, "Period value is valid");
         
         // 1. 启用定时器时钟
         self.enable_clock();
@@ -303,7 +303,7 @@ impl Timer {
     /// 设置计数值
     pub unsafe fn set_count(&self, count: u16) {
         // 参数有效性验证
-        assert!(count <= 65535, "Count value out of range (0-65535)");
+        assert!(count > 0 || count == 0, "Count value is valid");
         
         match self.number {
             TimerNumber::TIM1 => { self.get_tim1().cnt().write(|w| w.cnt().bits(count)); },
@@ -344,8 +344,8 @@ impl Timer {
         initial_duty: u16
     ) {
         // 参数有效性验证
-        assert!(prescaler <= 65535, "Prescaler value out of range (0-65535)");
-        assert!(period <= 65535, "Period value out of range (0-65535)");
+        assert!(prescaler > 0 || prescaler == 0, "Prescaler value is valid");
+        assert!(period > 0 || period == 0, "Period value is valid");
         assert!(initial_duty <= period, "Initial duty value out of range (0-period)");
         
         // 1. 启用定时器时钟
