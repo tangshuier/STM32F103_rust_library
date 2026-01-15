@@ -2,7 +2,7 @@
 //! 
 //! 包含板级支持包
 
-// pub mod adc;
+pub mod adc;
 // pub mod bkp;
 // pub mod can;
 // pub mod crc;
