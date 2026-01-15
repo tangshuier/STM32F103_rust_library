@@ -119,6 +119,16 @@ pub enum RtcClockSource {
     HseDiv128,      // HSE除以128
 }
 
+/// RCC中断枚举
+pub enum RccInterrupt {
+    LsiRdy = 0x00000002,    // LSI就绪中断
+    LseRdy = 0x00000004,    // LSE就绪中断
+    HsiRdy = 0x00000008,    // HSI就绪中断
+    HseRdy = 0x00000010,    // HSE就绪中断
+    PllRdy = 0x00000040,    // PLL就绪中断
+    Css = 0x00800000,        // 时钟安全系统中断
+}
+
 impl RccDriver {
     /// 创建新的RCC实例
     pub const fn new() -> Self {
@@ -869,6 +879,82 @@ impl RccDriver {
         rcc.cr().write(|w: &mut stm32f103::rcc::cr::W| unsafe { w.bits(value) });
     }
     
+    /// 配置RTC时钟源
+    pub unsafe fn configure_rtc_clock_source(&self, source: RtcClockSource) {
+        // 启用PWR和BKP时钟，以便访问备份域
+        self.enable_apb1_peripheral(Apb1Peripheral::PWR);
+        self.enable_apb1_peripheral(Apb1Peripheral::BKP);
+        
+        // 解锁备份域访问
+        let pwr = &mut *(0x40007000 as *mut stm32f103::Pwr);
+        pwr.cr().write(|w: &mut stm32f103::pwr::cr::W| unsafe { w.bits(0x10) });
+        
+        let rcc = self.get_rcc();
+        
+        // 首先关闭RTC时钟
+        rcc.bdcr().modify(|r, w| {
+            w.rtcen().clear_bit();
+            w.bits(r.bits())
+        });
+        
+        // 配置RTC时钟源
+        rcc.bdcr().modify(|r, w| {
+            let mut bits = r.bits();
+            // 清除RTCSEL位
+            bits &= !0x00000003;
+            
+            // 设置新的RTC时钟源
+            match source {
+                RtcClockSource::LSE => {
+                    // 启用LSE
+                    bits |= (1 << 0) | (1 << 8); // LSEON和RTCSEL=01
+                },
+                RtcClockSource::LSI => {
+                    // 启用LSI
+                    self.enable_lsi();
+                    bits |= 0x00000002; // RTCSEL=10
+                },
+                RtcClockSource::HseDiv128 => {
+                    // 确保HSE已启用
+                    if !self.is_hse_ready() {
+                        self.enable_hse();
+                    }
+                    bits |= 0x00000003; // RTCSEL=11
+                },
+            }
+            
+            w.bits(bits)
+        });
+        
+        // 等待RTC时钟就绪
+        while (rcc.bdcr().read().bits() & (1 << 15)) == 0 {
+            core::hint::spin_loop();
+        }
+        
+        // 锁定备份域访问
+        pwr.cr().write(|w: &mut stm32f103::pwr::cr::W| unsafe { w.bits(0x00) });
+    }
+    
+    /// 清除RCC标志位
+    pub unsafe fn clear_flag(&self) {
+        let rcc = self.get_rcc();
+        // 清除所有RCC标志位
+        let mut cr_value = rcc.cr().read().bits();
+        cr_value &= !0x0000009F; // 清除HSIRDY、HSERDY、PLLRDY、CSS标志位
+        rcc.cr().write(|w| unsafe { w.bits(cr_value) });
+        
+        let mut bdcr_value = rcc.bdcr().read().bits();
+        bdcr_value &= !0x00000002; // 清除LSERDY标志位
+        rcc.bdcr().write(|w| unsafe { w.bits(bdcr_value) });
+    }
+    
+    /// 清除特定的RCC中断挂起位
+    pub unsafe fn clear_it_pending_bit(&self, interrupt: RccInterrupt) {
+        let rcc = self.get_rcc();
+        // 清除指定的中断挂起位
+        rcc.cir().write(|w| unsafe { w.bits(interrupt as u32) });
+    }
+    
     /// 复位备份域
     pub unsafe fn reset_backup_domain(&self) {
         // 启用PWR和BKP时钟
@@ -879,8 +965,19 @@ impl RccDriver {
         let pwr = &mut *(0x40007000 as *mut stm32f103::Pwr);
         pwr.cr().write(|w: &mut stm32f103::pwr::cr::W| unsafe { w.bits(0x10) });
         
-        // 注意：当前stm32f103库可能不支持bdcr寄存器访问
-        // 这里暂时省略备份域复位操作
+        let rcc = self.get_rcc();
+        
+        // 复位备份域
+        rcc.bdcr().modify(|r, w| {
+            w.bdrst().set_bit();
+            w.bits(r.bits())
+        });
+        
+        // 清除复位标志
+        rcc.bdcr().modify(|r, w| {
+            w.bdrst().clear_bit();
+            w.bits(r.bits())
+        });
         
         // 锁定备份域访问
         pwr.cr().write(|w: &mut stm32f103::pwr::cr::W| unsafe { w.bits(0x00) });
