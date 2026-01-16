@@ -1,4 +1,4 @@
-//! UART/USART模块
+﻿//! UART/USART模块
 //! 提供串口通信功能，支持中断接收和多种配置选项
 
 // 屏蔽未使用代码警告
@@ -9,7 +9,7 @@ use core::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use core::cell::UnsafeCell;
 
 // 导入内部生成的设备驱动库
-use stm32f103::*;
+use library::*;
 
 /// 串口波特率枚举
 #[derive(Debug, Clone, Copy)]

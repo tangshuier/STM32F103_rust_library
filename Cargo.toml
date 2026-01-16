@@ -9,7 +9,7 @@ cortex-m = "0.7"
 cortex-m-rt = "0.7"
 panic-halt = "0.2"
 heapless = "0.7"
-stm32f103 = { path = "src/library" }
+library = { path = "src/library" }
 
 [build-dependencies]
 cc = "1.0"

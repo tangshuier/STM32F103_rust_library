@@ -1,10 +1,10 @@
-//! RTC模块
+﻿//! RTC模块
 //! 提供实时时钟功能封装
 
 #![allow(unused)]
 
 // 导入内部生成的设备驱动库
-use stm32f103::*;
+use library::*;
 
 /// RTC结构体
 pub struct Rtc;
@@ -16,18 +16,18 @@ impl Rtc {
     }
     
     /// 获取RTC寄存器块
-    unsafe fn rtc(&self) -> &'static mut stm32f103::rtc::RegisterBlock {
-        &mut *(0x40002800 as *mut stm32f103::rtc::RegisterBlock)
+    unsafe fn rtc(&self) -> &'static mut library::rtc::RegisterBlock {
+        &mut *(0x40002800 as *mut library::rtc::RegisterBlock)
     }
     
     /// 获取RCC寄存器块
-    unsafe fn rcc(&self) -> &'static mut stm32f103::rcc::RegisterBlock {
-        &mut *(0x40021000 as *mut stm32f103::rcc::RegisterBlock)
+    unsafe fn rcc(&self) -> &'static mut library::rcc::RegisterBlock {
+        &mut *(0x40021000 as *mut library::rcc::RegisterBlock)
     }
     
     /// 获取PWR寄存器块
-    unsafe fn pwr(&self) -> &'static mut stm32f103::pwr::RegisterBlock {
-        &mut *(0x40007000 as *mut stm32f103::pwr::RegisterBlock)
+    unsafe fn pwr(&self) -> &'static mut library::pwr::RegisterBlock {
+        &mut *(0x40007000 as *mut library::pwr::RegisterBlock)
     }
     
     /// 初始化RTC
@@ -36,26 +36,26 @@ impl Rtc {
         let pwr = self.pwr();
         
         // 启用PWR和BKP时钟
-        rcc.apb1enr().modify(|_, w: &mut stm32f103::rcc::apb1enr::W| w
+        rcc.apb1enr().modify(|_, w: &mut library::rcc::apb1enr::W| w
             .pwren().set_bit()
             .bkpen().set_bit()
         );
         
         // 使能对备份域的访问
-        pwr.cr().modify(|_, w: &mut stm32f103::pwr::cr::W| w
+        pwr.cr().modify(|_, w: &mut library::pwr::cr::W| w
             .dbp().set_bit()
         );
         
         // 重置备份域
-        rcc.bdcr().modify(|_, w: &mut stm32f103::rcc::bdcr::W| w
+        rcc.bdcr().modify(|_, w: &mut library::rcc::bdcr::W| w
             .bdrst().set_bit()
         );
-        rcc.bdcr().modify(|_, w: &mut stm32f103::rcc::bdcr::W| w
+        rcc.bdcr().modify(|_, w: &mut library::rcc::bdcr::W| w
             .bdrst().clear_bit()
         );
         
         // 启用LSE振荡器
-        rcc.bdcr().modify(|_, w: &mut stm32f103::rcc::bdcr::W| w
+        rcc.bdcr().modify(|_, w: &mut library::rcc::bdcr::W| w
             .lseon().set_bit()
         );
         
@@ -65,12 +65,12 @@ impl Rtc {
         }
         
         // 选择LSE作为RTC时钟源
-        rcc.bdcr().modify(|_, w: &mut stm32f103::rcc::bdcr::W| w
+        rcc.bdcr().modify(|_, w: &mut library::rcc::bdcr::W| w
             .rtcsel().bits(0b10)
         );
         
         // 启用RTC时钟
-        rcc.bdcr().modify(|_, w: &mut stm32f103::rcc::bdcr::W| w
+        rcc.bdcr().modify(|_, w: &mut library::rcc::bdcr::W| w
             .rtcen().set_bit()
         );
         
@@ -79,8 +79,8 @@ impl Rtc {
         
         // 设置预分频值
         let rtc = self.rtc();
-        rtc.prlh().write(|w: &mut stm32f103::rtc::prlh::W| unsafe { w.bits((prescaler >> 16) & 0x0F) });
-        rtc.prll().write(|w: &mut stm32f103::rtc::prll::W| unsafe { w.bits(prescaler & 0xFFFF) });
+        rtc.prlh().write(|w: &mut library::rtc::prlh::W| unsafe { w.bits((prescaler >> 16) & 0x0F) });
+        rtc.prll().write(|w: &mut library::rtc::prll::W| unsafe { w.bits(prescaler & 0xFFFF) });
         
         // 退出配置模式
         self.exit_config_mode();
@@ -95,7 +95,7 @@ impl Rtc {
     /// 进入配置模式
     pub unsafe fn enter_config_mode(&self) {
         let rtc = self.rtc();
-        rtc.crl().modify(|_, w: &mut stm32f103::rtc::crl::W| w
+        rtc.crl().modify(|_, w: &mut library::rtc::crl::W| w
             .cnf().set_bit()
         );
         // 等待配置模式进入
@@ -107,7 +107,7 @@ impl Rtc {
     /// 退出配置模式
     pub unsafe fn exit_config_mode(&self) {
         let rtc = self.rtc();
-        rtc.crl().modify(|_, w: &mut stm32f103::rtc::crl::W| w
+        rtc.crl().modify(|_, w: &mut library::rtc::crl::W| w
             .cnf().clear_bit()
         );
     }
@@ -115,7 +115,7 @@ impl Rtc {
     /// 等待RTC寄存器同步
     pub unsafe fn wait_for_sync(&self) {
         let rtc = self.rtc();
-        rtc.crl().modify(|_, w: &mut stm32f103::rtc::crl::W| w
+        rtc.crl().modify(|_, w: &mut library::rtc::crl::W| w
             .rsf().clear_bit()
         );
         while rtc.crl().read().rsf().bit_is_clear() {
@@ -138,8 +138,8 @@ impl Rtc {
         let rtc = self.rtc();
         self.enter_config_mode();
         
-        rtc.cnth().write(|w: &mut stm32f103::rtc::cnth::W| unsafe { w.bits((counter >> 16) & 0xFFFF) });
-        rtc.cntl().write(|w: &mut stm32f103::rtc::cntl::W| unsafe { w.bits(counter & 0xFFFF) });
+        rtc.cnth().write(|w: &mut library::rtc::cnth::W| unsafe { w.bits((counter >> 16) & 0xFFFF) });
+        rtc.cntl().write(|w: &mut library::rtc::cntl::W| unsafe { w.bits(counter & 0xFFFF) });
         
         self.exit_config_mode();
         self.wait_for_last_task();
@@ -161,8 +161,8 @@ impl Rtc {
         let rtc = self.rtc();
         self.enter_config_mode();
         
-        rtc.alrh().write(|w: &mut stm32f103::rtc::alrh::W| unsafe { w.bits((alarm >> 16) & 0xFFFF) });
-        rtc.alrl().write(|w: &mut stm32f103::rtc::alrl::W| unsafe { w.bits(alarm & 0xFFFF) });
+        rtc.alrh().write(|w: &mut library::rtc::alrh::W| unsafe { w.bits((alarm >> 16) & 0xFFFF) });
+        rtc.alrl().write(|w: &mut library::rtc::alrl::W| unsafe { w.bits(alarm & 0xFFFF) });
         
         self.exit_config_mode();
         self.wait_for_last_task();
@@ -180,7 +180,7 @@ impl Rtc {
         let rtc = self.rtc();
         self.enter_config_mode();
         
-        rtc.crh().modify(|_, w: &mut stm32f103::rtc::crh::W| w
+        rtc.crh().modify(|_, w: &mut library::rtc::crh::W| w
             .secie().set_bit()
         );
         
@@ -193,7 +193,7 @@ impl Rtc {
         let rtc = self.rtc();
         self.enter_config_mode();
         
-        rtc.crh().modify(|_, w: &mut stm32f103::rtc::crh::W| w
+        rtc.crh().modify(|_, w: &mut library::rtc::crh::W| w
             .secie().clear_bit()
         );
         
@@ -206,7 +206,7 @@ impl Rtc {
         let rtc = self.rtc();
         self.enter_config_mode();
         
-        rtc.crh().modify(|_, w: &mut stm32f103::rtc::crh::W| w
+        rtc.crh().modify(|_, w: &mut library::rtc::crh::W| w
             .alrie().set_bit()
         );
         
@@ -219,7 +219,7 @@ impl Rtc {
         let rtc = self.rtc();
         self.enter_config_mode();
         
-        rtc.crh().modify(|_, w: &mut stm32f103::rtc::crh::W| w
+        rtc.crh().modify(|_, w: &mut library::rtc::crh::W| w
             .alrie().clear_bit()
         );
         
@@ -232,7 +232,7 @@ impl Rtc {
         let rtc = self.rtc();
         self.enter_config_mode();
         
-        rtc.crh().modify(|_, w: &mut stm32f103::rtc::crh::W| w
+        rtc.crh().modify(|_, w: &mut library::rtc::crh::W| w
             .owie().set_bit()
         );
         
@@ -245,7 +245,7 @@ impl Rtc {
         let rtc = self.rtc();
         self.enter_config_mode();
         
-        rtc.crh().modify(|_, w: &mut stm32f103::rtc::crh::W| w
+        rtc.crh().modify(|_, w: &mut library::rtc::crh::W| w
             .owie().clear_bit()
         );
         
@@ -256,7 +256,7 @@ impl Rtc {
     /// 清除RTC秒中断标志
     pub unsafe fn clear_second_flag(&self) {
         let rtc = self.rtc();
-        rtc.crl().modify(|_, w: &mut stm32f103::rtc::crl::W| w
+        rtc.crl().modify(|_, w: &mut library::rtc::crl::W| w
             .secf().clear_bit()
         );
     }
@@ -264,7 +264,7 @@ impl Rtc {
     /// 清除RTC闹钟中断标志
     pub unsafe fn clear_alarm_flag(&self) {
         let rtc = self.rtc();
-        rtc.crl().modify(|_, w: &mut stm32f103::rtc::crl::W| w
+        rtc.crl().modify(|_, w: &mut library::rtc::crl::W| w
             .alrf().clear_bit()
         );
     }
@@ -272,7 +272,7 @@ impl Rtc {
     /// 清除RTC溢出中断标志
     pub unsafe fn clear_overflow_flag(&self) {
         let rtc = self.rtc();
-        rtc.crl().modify(|_, w: &mut stm32f103::rtc::crl::W| w
+        rtc.crl().modify(|_, w: &mut library::rtc::crl::W| w
             .owf().clear_bit()
         );
     }

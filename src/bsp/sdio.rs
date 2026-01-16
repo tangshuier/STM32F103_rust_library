@@ -1,10 +1,10 @@
-//! SDIO模块
+﻿//! SDIO模块
 //! 提供安全数字输入/输出功能封装
 
 #![allow(unused)]
 
 // 导入内部生成的设备驱动库
-use stm32f103::*;
+use library::*;
 
 /// SDIO时钟频率枚举
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -40,8 +40,8 @@ impl SdioDriver {
     }
     
     /// 获取SDIO寄存器块
-    unsafe fn sdio() -> &'static mut stm32f103::sdio::RegisterBlock {
-        &mut *(0x40012C00 as *mut stm32f103::sdio::RegisterBlock)
+    unsafe fn sdio() -> &'static mut library::sdio::RegisterBlock {
+        &mut *(0x40012C00 as *mut library::sdio::RegisterBlock)
     }
     
     /// 初始化SDIO
@@ -52,19 +52,19 @@ impl SdioDriver {
         let sdio = SdioDriver::sdio();
         
         // 关闭SDIO电源
-        sdio.power().write(|w: &mut stm32f103::sdio::power::W| unsafe { w.bits(0x00000000) });
+        sdio.power().write(|w: &mut library::sdio::power::W| unsafe { w.bits(0x00000000) });
         
         // 重置SDIO
         self.reset();
         
         // 打开SDIO电源
-        sdio.power().write(|w: &mut stm32f103::sdio::power::W| unsafe { w.bits(0x00000003) });
+        sdio.power().write(|w: &mut library::sdio::power::W| unsafe { w.bits(0x00000003) });
         
         // 配置时钟频率
         self.set_clock_frequency(clock_freq);
         
         // 启用SDIO
-        sdio.power().write(|w: &mut stm32f103::sdio::power::W| unsafe { w.bits(0x00000003) });
+        sdio.power().write(|w: &mut library::sdio::power::W| unsafe { w.bits(0x00000003) });
     }
     
     /// 重置SDIO
@@ -72,7 +72,7 @@ impl SdioDriver {
         let sdio = SdioDriver::sdio();
         
         // 重置命令通道（通过重置CPSMEN位）
-        sdio.cmd().modify(|_, w: &mut stm32f103::sdio::cmd::W| w
+        sdio.cmd().modify(|_, w: &mut library::sdio::cmd::W| w
             .cpsmen().clear_bit()
         );
         while !sdio.cmd().read().cpsmen().bit() {
@@ -80,7 +80,7 @@ impl SdioDriver {
         }
         
         // 重置数据通道（通过重置DTEN位）
-        sdio.dctrl().modify(|_, w: &mut stm32f103::sdio::dctrl::W| w
+        sdio.dctrl().modify(|_, w: &mut library::sdio::dctrl::W| w
             .dten().clear_bit()
         );
         while !sdio.dctrl().read().dten().bit() {
@@ -96,7 +96,7 @@ impl SdioDriver {
         let sdio = SdioDriver::sdio();
         
         // 禁用时钟
-        sdio.clkcr().modify(|_, w: &mut stm32f103::sdio::clkcr::W| w
+        sdio.clkcr().modify(|_, w: &mut library::sdio::clkcr::W| w
             .clken().clear_bit()
         );
         
@@ -104,20 +104,20 @@ impl SdioDriver {
         match clock_freq {
             SdioClockFreq::Freq400kHz => {
                 // 400kHz = 25MHz / 62.5, 取63
-                sdio.clkcr().write(|w: &mut stm32f103::sdio::clkcr::W| unsafe { w.bits((62 << 0) | (1 << 7)) });
+                sdio.clkcr().write(|w: &mut library::sdio::clkcr::W| unsafe { w.bits((62 << 0) | (1 << 7)) });
             }
             SdioClockFreq::Freq25MHz => {
                 // 25MHz = 50MHz / 2
-                sdio.clkcr().write(|w: &mut stm32f103::sdio::clkcr::W| unsafe { w.bits((1 << 0) | (1 << 7)) });
+                sdio.clkcr().write(|w: &mut library::sdio::clkcr::W| unsafe { w.bits((1 << 0) | (1 << 7)) });
             }
             SdioClockFreq::Freq50MHz => {
                 // 50MHz = 50MHz / 1
-                sdio.clkcr().write(|w: &mut stm32f103::sdio::clkcr::W| unsafe { w.bits((0 << 0) | (1 << 7)) });
+                sdio.clkcr().write(|w: &mut library::sdio::clkcr::W| unsafe { w.bits((0 << 0) | (1 << 7)) });
             }
         }
         
         // 启用时钟
-        sdio.clkcr().modify(|_, w: &mut stm32f103::sdio::clkcr::W| w
+        sdio.clkcr().modify(|_, w: &mut library::sdio::clkcr::W| w
             .clken().set_bit()
         );
     }
@@ -132,14 +132,14 @@ impl SdioDriver {
         let sdio = SdioDriver::sdio();
         
         // 设置命令参数
-        sdio.arg().write(|w: &mut stm32f103::sdio::arg::W| unsafe { w.bits(arg) });
+        sdio.arg().write(|w: &mut library::sdio::arg::W| unsafe { w.bits(arg) });
         
         // 配置命令
         let mut cmd_reg = (cmd as u32) << 0;
         cmd_reg |= (resp_type as u32) << 6;
         cmd_reg |= (1 << 10); // 启动命令
         
-        sdio.cmd().write(|w: &mut stm32f103::sdio::cmd::W| unsafe { w.bits(cmd_reg) });
+        sdio.cmd().write(|w: &mut library::sdio::cmd::W| unsafe { w.bits(cmd_reg) });
         
         // 等待命令完成
         while !sdio.sta().read().cmdrend().bit() {
@@ -147,7 +147,7 @@ impl SdioDriver {
         }
         
         // 清除命令完成标志
-        sdio.icr().write(|w: &mut stm32f103::sdio::icr::W| unsafe { w.bits(1 << 0) });
+        sdio.icr().write(|w: &mut library::sdio::icr::W| unsafe { w.bits(1 << 0) });
     }
     
     /// 读取响应
@@ -192,7 +192,7 @@ impl SdioDriver {
         let sdio = SdioDriver::sdio();
         
         // 设置数据长度
-        sdio.dlen().write(|w: &mut stm32f103::sdio::dlen::W| unsafe { w.bits((block_size * block_count) as u32) });
+        sdio.dlen().write(|w: &mut library::sdio::dlen::W| unsafe { w.bits((block_size * block_count) as u32) });
         
         // 配置数据控制寄存器
         let mut dctrl = 0x00000000;
@@ -200,7 +200,7 @@ impl SdioDriver {
         dctrl |= (1 << 4); // 启用数据传输
         dctrl |= (1 << 5); // 块传输模式
         
-        sdio.dctrl().write(|w: &mut stm32f103::sdio::dctrl::W| unsafe { w.bits(dctrl) });
+        sdio.dctrl().write(|w: &mut library::sdio::dctrl::W| unsafe { w.bits(dctrl) });
     }
     
     /// 启动数据传输
@@ -208,7 +208,7 @@ impl SdioDriver {
         let sdio = SdioDriver::sdio();
         
         // 启动数据传输
-        sdio.dctrl().modify(|_, w: &mut stm32f103::sdio::dctrl::W| w
+        sdio.dctrl().modify(|_, w: &mut library::sdio::dctrl::W| w
             .dten().set_bit()
         );
     }
@@ -222,7 +222,7 @@ impl SdioDriver {
         }
         
         // 清除数据传输完成标志
-        sdio.icr().write(|w: &mut stm32f103::sdio::icr::W| unsafe { w.bits(1 << 1) });
+        sdio.icr().write(|w: &mut library::sdio::icr::W| unsafe { w.bits(1 << 1) });
     }
     
     /// 读取数据
@@ -267,14 +267,14 @@ impl SdioDriver {
             if sdio.sta().read().txfifohe().bit() {
                 if remaining >= 4 {
                     let data = u32::from_le_bytes(buffer[index..index+4].try_into().unwrap());
-                    sdio.fifo().write(|w: &mut stm32f103::sdio::fifo::W| unsafe { w.bits(data) });
+                    sdio.fifo().write(|w: &mut library::sdio::fifo::W| unsafe { w.bits(data) });
                     index += 4;
                     remaining -= 4;
                 } else {
                     let mut padding = [0u8; 4];
                     padding[0..remaining].copy_from_slice(&buffer[index..index+remaining]);
                     let data = u32::from_le_bytes(padding);
-                    sdio.fifo().write(|w: &mut stm32f103::sdio::fifo::W| unsafe { w.bits(data) });
+                    sdio.fifo().write(|w: &mut library::sdio::fifo::W| unsafe { w.bits(data) });
                     index += remaining;
                     remaining = 0;
                 }
@@ -288,7 +288,7 @@ impl SdioDriver {
     /// * `interrupt_mask` - 中断掩码
     pub unsafe fn enable_interrupts(&self, interrupt_mask: u32) {
         let sdio = SdioDriver::sdio();
-        sdio.mask().modify(|_, w: &mut stm32f103::sdio::mask::W| unsafe {
+        sdio.mask().modify(|_, w: &mut library::sdio::mask::W| unsafe {
             w.bits(sdio.mask().read().bits() | interrupt_mask)
         });
     }
@@ -299,7 +299,7 @@ impl SdioDriver {
     /// * `interrupt_mask` - 中断掩码
     pub unsafe fn disable_interrupts(&self, interrupt_mask: u32) {
         let sdio = SdioDriver::sdio();
-        sdio.mask().modify(|_, w: &mut stm32f103::sdio::mask::W| unsafe {
+        sdio.mask().modify(|_, w: &mut library::sdio::mask::W| unsafe {
             w.bits(sdio.mask().read().bits() & !interrupt_mask)
         });
     }
@@ -319,7 +319,7 @@ impl SdioDriver {
     /// * `flags` - 要清除的标志
     pub unsafe fn clear_status_flags(&self, flags: u32) {
         let sdio = SdioDriver::sdio();// 清除状态标志
-        sdio.icr().write(|w: &mut stm32f103::sdio::icr::W| unsafe { w.bits(flags) });
+        sdio.icr().write(|w: &mut library::sdio::icr::W| unsafe { w.bits(flags) });
     }
     
     /// 禁用SDIO
@@ -327,7 +327,7 @@ impl SdioDriver {
         let sdio = SdioDriver::sdio();
         
         // 关闭SDIO电源
-        sdio.power().write(|w: &mut stm32f103::sdio::power::W| unsafe { w.bits(0x00000000) });
+        sdio.power().write(|w: &mut library::sdio::power::W| unsafe { w.bits(0x00000000) });
     }
 }
 

@@ -1,4 +1,4 @@
-//! IIC模块
+﻿//! IIC模块
 //! 提供硬件IIC和软件IIC的封装
 
 // 屏蔽未使用代码警告
@@ -8,7 +8,7 @@ use crate::bsp::gpio::{GpioPin, GpioMode};
 use crate::bsp::delay::*;
 
 // 导入内部生成的设备驱动库
-use stm32f103::*;
+use library::*;
 
 // 导入asm宏
 use core::arch::asm;
@@ -194,7 +194,7 @@ impl IicClockConfig {
     /// # Returns
     /// 基于当前系统配置的IIC时钟配置
     pub unsafe fn from_system() -> Self {
-        let rcc = &mut *(0x40021000 as *mut stm32f103::rcc::RegisterBlock);
+        let rcc = &mut *(0x40021000 as *mut library::rcc::RegisterBlock);
         
         // 读取系统时钟源
         let rcc_cfgr = rcc.cfgr().read().bits();
@@ -478,14 +478,14 @@ impl HardwareIic {
 
     /// 初始化硬件IIC（完全按照STM32F10x_StdPeriph_Driver库的I2C_Init函数实现）
     unsafe fn init(&self) {
-        let rcc = &mut *(0x40021000 as *mut stm32f103::rcc::RegisterBlock);
-        let i2c = &mut *(0x40005400 as *mut stm32f103::i2c1::RegisterBlock);
+        let rcc = &mut *(0x40021000 as *mut library::rcc::RegisterBlock);
+        let i2c = &mut *(0x40005400 as *mut library::i2c1::RegisterBlock);
         
         // 1. 启用GPIOB时钟
         // 启用GPIOB时钟和AFIO时钟
         // 使用直接写入整个寄存器值的方式
         let current_apb2enr = rcc.apb2enr().read().bits();
-        rcc.apb2enr().write(|w: &mut stm32f103::rcc::apb2enr::W| unsafe { w.bits(current_apb2enr | (1 << 3) | (1 << 0)) });
+        rcc.apb2enr().write(|w: &mut library::rcc::apb2enr::W| unsafe { w.bits(current_apb2enr | (1 << 3) | (1 << 0)) });
         
         // 2. 配置SCL和SDA引脚为复用开漏输出，使用指定的引脚
         if let Some((scl_pin, sda_pin)) = self.config.pins {
@@ -502,22 +502,22 @@ impl HardwareIic {
         }
         
         // 3. 启用I2C1时钟
-        rcc.apb1enr().modify(|_, w: &mut stm32f103::rcc::apb1enr::W| w.i2c1en().set_bit());
+        rcc.apb1enr().modify(|_, w: &mut library::rcc::apb1enr::W| w.i2c1en().set_bit());
         
         // 4. 禁用I2C1
-        i2c.cr1().modify(|_, w: &mut stm32f103::i2c1::cr1::W| w.pe().clear_bit());
+        i2c.cr1().modify(|_, w: &mut library::i2c1::cr1::W| w.pe().clear_bit());
         
         // 5. 设置CR2寄存器，使用类型安全的时钟配置
         let clock_config = self.config.clock_config.unwrap();
         let freqrange = (clock_config.pclk1 / 1000000) as u16;
-        i2c.cr2().write(|w: &mut stm32f103::i2c1::cr2::W| w.freq().bits(freqrange.try_into().unwrap()));
+        i2c.cr2().write(|w: &mut library::i2c1::cr2::W| w.freq().bits(freqrange.try_into().unwrap()));
         
         // 6. 清空OAR1和OAR2寄存器
-        i2c.oar1().write(|w: &mut stm32f103::i2c1::oar1::W| w.bits(0x0000));
-        i2c.oar2().write(|w: &mut stm32f103::i2c1::oar2::W| w.bits(0x0000));
+        i2c.oar1().write(|w: &mut library::i2c1::oar1::W| w.bits(0x0000));
+        i2c.oar2().write(|w: &mut library::i2c1::oar2::W| w.bits(0x0000));
         
         // 7. 设置OAR1寄存器
-        i2c.oar1().write(|w: &mut stm32f103::i2c1::oar1::W| unsafe { w.bits(1 << 14) }); // 必须设置第14位为1，这是I2C规范要求的
+        i2c.oar1().write(|w: &mut library::i2c1::oar1::W| unsafe { w.bits(1 << 14) }); // 必须设置第14位为1，这是I2C规范要求的
         
         // 8. 设置I2C速度（CCR寄存器）
         // 完全按照STM32F10x_StdPeriph_Driver库的I2C_Init函数实现
@@ -547,10 +547,10 @@ impl HardwareIic {
         // 设置CCR寄存器，包括占空比位
         if duty_cycle == 1 {
             // 快速模式，占空比为16:9
-            i2c.ccr().write(|w: &mut stm32f103::i2c1::ccr::W| unsafe { w.bits((1 << 14) | ccr) }); // 设置DUTY位（第14位）
+            i2c.ccr().write(|w: &mut library::i2c1::ccr::W| unsafe { w.bits((1 << 14) | ccr) }); // 设置DUTY位（第14位）
         } else {
             // 标准模式或2:1占空比
-            i2c.ccr().write(|w: &mut stm32f103::i2c1::ccr::W| unsafe { w.bits(ccr) });
+            i2c.ccr().write(|w: &mut library::i2c1::ccr::W| unsafe { w.bits(ccr) });
         }
         
         // 9. 设置TRISE寄存器
@@ -562,7 +562,7 @@ impl HardwareIic {
             ((freqrange as u32 * 300) / 1000) + 1
         };
         
-        i2c.trise().write(|w: &mut stm32f103::i2c1::trise::W| w.bits(trise));
+        i2c.trise().write(|w: &mut library::i2c1::trise::W| w.bits(trise));
         
         // 10. 设置CR1寄存器，包括ACK位、DutyCycle位、Mode位和GeneralCall位
         // 使用直接写入整个寄存器值的方式
@@ -578,10 +578,10 @@ impl HardwareIic {
             cr1_value |= 1 << 14; // DUTY位
         }
         
-        i2c.cr1().write(|w: &mut stm32f103::i2c1::cr1::W| unsafe { w.bits(cr1_value) });
+        i2c.cr1().write(|w: &mut library::i2c1::cr1::W| unsafe { w.bits(cr1_value) });
         
         // 11. 启用I2C1
-        i2c.cr1().modify(|_, w: &mut stm32f103::i2c1::cr1::W| w.pe().set_bit());
+        i2c.cr1().modify(|_, w: &mut library::i2c1::cr1::W| w.pe().set_bit());
         
         // 12. 添加实际的初始化延迟
         for _ in 0..10000 {
@@ -592,10 +592,10 @@ impl HardwareIic {
 
     /// 生成I2C起始信号（完全按照STM32F10x_StdPeriph_Driver库的I2C_GenerateSTART函数实现）
     unsafe fn start(&self) -> bool {
-        let i2c = &mut *(0x40005400 as *mut stm32f103::i2c1::RegisterBlock);
+        let i2c = &mut *(0x40005400 as *mut library::i2c1::RegisterBlock);
         
         // 生成起始信号
-        i2c.cr1().modify(|_, w: &mut stm32f103::i2c1::cr1::W| w.start().set_bit());
+        i2c.cr1().modify(|_, w: &mut library::i2c1::cr1::W| w.start().set_bit());
         
         // 等待SB标志置位，使用基于系统时钟的超时机制
         !wait_with_timeout(self.config.timeout_us, || {
@@ -605,15 +605,15 @@ impl HardwareIic {
 
     /// 生成I2C停止信号
     unsafe fn stop(&self) {
-        let i2c = &mut *(0x40005400 as *mut stm32f103::i2c1::RegisterBlock);
+        let i2c = &mut *(0x40005400 as *mut library::i2c1::RegisterBlock);
         
         // 生成停止信号
-        i2c.cr1().modify(|_, w: &mut stm32f103::i2c1::cr1::W| w.stop().set_bit());
+        i2c.cr1().modify(|_, w: &mut library::i2c1::cr1::W| w.stop().set_bit());
     }
 
     /// 发送设备地址
     unsafe fn send_addr(&self, addr: u8, read: bool) -> bool {
-        let i2c = &mut *(0x40005400 as *mut stm32f103::i2c1::RegisterBlock);
+        let i2c = &mut *(0x40005400 as *mut library::i2c1::RegisterBlock);
         
         // 检查总线是否空闲，使用基于系统时钟的超时机制，配置中的超时时间
         let bus_free = !wait_with_timeout(self.config.timeout_us, || {
@@ -630,7 +630,7 @@ impl HardwareIic {
         } else {
             addr // 写入模式，最低位置0
         };
-        i2c.dr().write(|w: &mut stm32f103::i2c1::dr::W| w.bits(addr_byte as u32));
+        i2c.dr().write(|w: &mut library::i2c1::dr::W| w.bits(addr_byte as u32));
         
         // 等待ADDR标志置位，使用基于系统时钟的超时机制，配置中的超时时间
         let addr_set = !wait_with_timeout(self.config.timeout_us, || {
@@ -648,7 +648,7 @@ impl HardwareIic {
 
     /// 发送数据（完全按照STM32F10x_StdPeriph_Driver库的I2C_Transmit函数实现）
     unsafe fn send_data(&self, data: u8, is_last: bool) -> bool {
-        let i2c = &mut *(0x40005400 as *mut stm32f103::i2c1::RegisterBlock);
+        let i2c = &mut *(0x40005400 as *mut library::i2c1::RegisterBlock);
         
         // 等待TXE标志置位，使用基于系统时钟的超时机制，配置中的超时时间
         let txe_set = !wait_with_timeout(self.config.timeout_us, || {
@@ -660,7 +660,7 @@ impl HardwareIic {
         }
         
         // 发送数据
-        i2c.dr().write(|w: &mut stm32f103::i2c1::dr::W| w.bits(data as u32));
+        i2c.dr().write(|w: &mut library::i2c1::dr::W| w.bits(data as u32));
         
         // 等待传输完成
         if is_last {
@@ -676,7 +676,7 @@ impl HardwareIic {
 
     /// 接收数据
     unsafe fn recv_data(&self, ack: bool) -> u8 {
-        let i2c = &mut *(0x40005400 as *mut stm32f103::i2c1::RegisterBlock);
+        let i2c = &mut *(0x40005400 as *mut library::i2c1::RegisterBlock);
         
         // 等待RXNE标志置位，使用基于系统时钟的超时机制，配置中的超时时间
         let rxne_set = !wait_with_timeout(self.config.timeout_us, || {
@@ -687,7 +687,7 @@ impl HardwareIic {
         let data = i2c.dr().read().bits() as u8;
         
         // 设置ACK
-        i2c.cr1().modify(|_, w: &mut stm32f103::i2c1::cr1::W| {
+        i2c.cr1().modify(|_, w: &mut library::i2c1::cr1::W| {
             if ack {
                 w.ack().set_bit() // 发送ACK
             } else {
@@ -700,7 +700,7 @@ impl HardwareIic {
 
     /// 写入数据到设备
     unsafe fn write(&self, addr: u8, data: &[u8]) -> IicResult<()> {
-        let i2c = &mut *(0x40005400 as *mut stm32f103::i2c1::RegisterBlock);
+        let i2c = &mut *(0x40005400 as *mut library::i2c1::RegisterBlock);
         
         // 检查总线是否忙碌，使用基于系统时钟的超时机制，配置中的超时时间
         let bus_free = !wait_with_timeout(self.config.timeout_us, || {
@@ -740,7 +740,7 @@ impl HardwareIic {
 
     /// 从设备读取数据
     unsafe fn read(&self, addr: u8, buffer: &mut [u8]) -> IicResult<()> {
-        let i2c = &mut *(0x40005400 as *mut stm32f103::i2c1::RegisterBlock);
+        let i2c = &mut *(0x40005400 as *mut library::i2c1::RegisterBlock);
         let len = buffer.len();
         
         // 检查总线是否忙碌，使用基于系统时钟的超时机制，配置中的超时时间
@@ -836,10 +836,10 @@ impl HardwareIic {
     
     /// 重置IIC控制器，恢复总线通信
     pub unsafe fn reset(&self) {
-        let i2c = &mut *(0x40005400 as *mut stm32f103::i2c1::RegisterBlock);
+        let i2c = &mut *(0x40005400 as *mut library::i2c1::RegisterBlock);
         
         // 1. 禁用I2C
-        i2c.cr1().modify(|_, w: &mut stm32f103::i2c1::cr1::W| w.pe().clear_bit());
+        i2c.cr1().modify(|_, w: &mut library::i2c1::cr1::W| w.pe().clear_bit());
         
         // 2. 清空所有状态寄存器
         // 读取SR1和SR2寄存器来清除标志

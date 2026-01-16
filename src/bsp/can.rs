@@ -1,10 +1,10 @@
-//! CAN模块
+﻿//! CAN模块
 //! 提供控制器局域网功能封装
 
 #![allow(unused)]
 
 // 导入内部生成的设备驱动库
-use stm32f103::*;
+use library::*;
 
 /// CAN模式枚举
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -69,13 +69,13 @@ impl Can {
     }
     
     /// 获取CAN1寄存器块
-    unsafe fn can1() -> &'static mut stm32f103::can1::RegisterBlock {
-        &mut *(0x40006400 as *mut stm32f103::can1::RegisterBlock)
+    unsafe fn can1() -> &'static mut library::can1::RegisterBlock {
+        &mut *(0x40006400 as *mut library::can1::RegisterBlock)
     }
     
     /// 获取RCC寄存器块
-    unsafe fn rcc() -> &'static mut stm32f103::rcc::RegisterBlock {
-        &mut *(0x40021000 as *mut stm32f103::rcc::RegisterBlock)
+    unsafe fn rcc() -> &'static mut library::rcc::RegisterBlock {
+        &mut *(0x40021000 as *mut library::rcc::RegisterBlock)
     }
     
     /// 初始化CAN
@@ -83,7 +83,7 @@ impl Can {
         let rcc = Can::rcc();
         
         // 启用CAN时钟
-        rcc.apb1enr().modify(|_, w: &mut stm32f103::rcc::apb1enr::W| w
+        rcc.apb1enr().modify(|_, w: &mut library::rcc::apb1enr::W| w
             .canen().set_bit()
         );
     }

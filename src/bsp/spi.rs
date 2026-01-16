@@ -1,10 +1,10 @@
-//! SPI模块
+﻿//! SPI模块
 //! 提供串行外设接口功能封装
 
 #![allow(unused)]
 
 // 使用内部生成的设备驱动库
-use stm32f103::*;
+use library::*;
 
 /// SPI枚举
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -84,11 +84,11 @@ impl Spi {
     }
     
     /// 获取对应的SPI寄存器块
-    unsafe fn get_spi(&self) -> &'static mut stm32f103::spi1::RegisterBlock {
+    unsafe fn get_spi(&self) -> &'static mut library::spi1::RegisterBlock {
         match self.number {
-            SpiNumber::SPI1 => &mut *(0x40013000 as *mut stm32f103::spi1::RegisterBlock),
-            SpiNumber::SPI2 => &mut *(0x40003800 as *mut stm32f103::spi2::RegisterBlock),
-            SpiNumber::SPI3 => &mut *(0x40003C00 as *mut stm32f103::spi3::RegisterBlock),
+            SpiNumber::SPI1 => &mut *(0x40013000 as *mut library::spi1::RegisterBlock),
+            SpiNumber::SPI2 => &mut *(0x40003800 as *mut library::spi2::RegisterBlock),
+            SpiNumber::SPI3 => &mut *(0x40003C00 as *mut library::spi3::RegisterBlock),
         }
     }
     
@@ -102,29 +102,29 @@ impl Spi {
         nss_mode: SpiNssMode,
     ) {
         // 启用SPI时钟
-        let rcc = &mut *(0x40021000 as *mut stm32f103::rcc::RegisterBlock);
+        let rcc = &mut *(0x40021000 as *mut library::rcc::RegisterBlock);
         match self.number {
             SpiNumber::SPI1 => {
                 let mut value = rcc.apb2enr().read().bits();
                 value |= 1 << 12;
-                rcc.apb2enr().write(|w: &mut stm32f103::rcc::apb2enr::W| unsafe { w.bits(value) });
+                rcc.apb2enr().write(|w: &mut library::rcc::apb2enr::W| unsafe { w.bits(value) });
             },
             SpiNumber::SPI2 => {
                 let mut value = rcc.apb1enr().read().bits();
                 value |= 1 << 14;
-                rcc.apb1enr().write(|w: &mut stm32f103::rcc::apb1enr::W| unsafe { w.bits(value) });
+                rcc.apb1enr().write(|w: &mut library::rcc::apb1enr::W| unsafe { w.bits(value) });
             },
             SpiNumber::SPI3 => {
                 let mut value = rcc.apb1enr().read().bits();
                 value |= 1 << 15;
-                rcc.apb1enr().write(|w: &mut stm32f103::rcc::apb1enr::W| unsafe { w.bits(value) });
+                rcc.apb1enr().write(|w: &mut library::rcc::apb1enr::W| unsafe { w.bits(value) });
             },
         }
         
         let spi = self.get_spi();
         
         // 禁用SPI
-        spi.cr1().write(|w: &mut stm32f103::spi1::cr1::W| unsafe { w.bits(spi.cr1().read().bits() & !(1 << 6)) });
+        spi.cr1().write(|w: &mut library::spi1::cr1::W| unsafe { w.bits(spi.cr1().read().bits() & !(1 << 6)) });
         
         // 配置SPI
         let mut cr1 = 0;
@@ -150,13 +150,13 @@ impl Spi {
         // 启用SPI
         cr1 |= (1 << 6);
         
-        spi.cr1().write(|w: &mut stm32f103::spi1::cr1::W| unsafe { w.bits(cr1) });
+        spi.cr1().write(|w: &mut library::spi1::cr1::W| unsafe { w.bits(cr1) });
         
         // 配置CR2
         let mut cr2 = 0;
         // 启用接收缓冲区非空中断
         cr2 |= (1 << 6);
-        spi.cr2().write(|w: &mut stm32f103::spi1::cr2::W| unsafe { w.bits(cr2) });
+        spi.cr2().write(|w: &mut library::spi1::cr2::W| unsafe { w.bits(cr2) });
     }
     
     /// 发送数据
@@ -168,7 +168,7 @@ impl Spi {
         }
         
         // 发送数据
-        spi.dr().write(|w: &mut stm32f103::spi1::dr::W| unsafe { w.bits(data as u32) });
+        spi.dr().write(|w: &mut library::spi1::dr::W| unsafe { w.bits(data as u32) });
         
         // 等待传输完成
         while (spi.sr().read().bits() & (1 << 7)) == 0 {
@@ -243,13 +243,13 @@ impl Spi {
     /// 启用SPI
     pub unsafe fn enable(&self) {
         let spi = self.get_spi();
-        spi.cr1().write(|w: &mut stm32f103::spi1::cr1::W| unsafe { w.bits(spi.cr1().read().bits() | (1 << 6)) });
+        spi.cr1().write(|w: &mut library::spi1::cr1::W| unsafe { w.bits(spi.cr1().read().bits() | (1 << 6)) });
     }
     
     /// 禁用SPI
     pub unsafe fn disable(&self) {
         let spi = self.get_spi();
-        spi.cr1().write(|w: &mut stm32f103::spi1::cr1::W| unsafe { w.bits(spi.cr1().read().bits() & !(1 << 6)) });
+        spi.cr1().write(|w: &mut library::spi1::cr1::W| unsafe { w.bits(spi.cr1().read().bits() & !(1 << 6)) });
     }
 }
 

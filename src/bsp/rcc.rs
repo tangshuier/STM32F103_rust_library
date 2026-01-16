@@ -1,10 +1,10 @@
-//! RCC模块
+﻿//! RCC模块
 //! 提供复位和时钟控制功能封装
 
 #![allow(unused)]
 
 // 使用生成的设备驱动库
-use stm32f103::*;
+use library::*;
 
 /// RCC时钟源枚举
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -166,28 +166,28 @@ impl RccDriver {
         // 启用内部高速时钟
         let mut cr_value = rcc.cr().read().bits();
         cr_value |= (1 << 0);
-        rcc.cr().write(|w: &mut stm32f103::rcc::cr::W| unsafe { w.bits(cr_value) });
+        rcc.cr().write(|w: &mut library::rcc::cr::W| unsafe { w.bits(cr_value) });
         
         // 重置CFGR寄存器
-        rcc.cfgr().write(|w: &mut stm32f103::rcc::cfgr::W| unsafe { w.bits(0x00000000) });
+        rcc.cfgr().write(|w: &mut library::rcc::cfgr::W| unsafe { w.bits(0x00000000) });
         
         // 重置CR寄存器（保留HSION位）
         cr_value = rcc.cr().read().bits();
         cr_value &= 0xFEF6FFFF;
-        rcc.cr().write(|w: &mut stm32f103::rcc::cr::W| unsafe { w.bits(cr_value) });
+        rcc.cr().write(|w: &mut library::rcc::cr::W| unsafe { w.bits(cr_value) });
         
         // 重置BORCR寄存器
         cr_value = rcc.cr().read().bits();
         cr_value &= 0xFFFBFFFF;
-        rcc.cr().write(|w: &mut stm32f103::rcc::cr::W| unsafe { w.bits(cr_value) });
+        rcc.cr().write(|w: &mut library::rcc::cr::W| unsafe { w.bits(cr_value) });
         
         // 重置CFGR寄存器的PLL相关位
         let mut cfgr_value = rcc.cfgr().read().bits();
         cfgr_value &= 0xFF80FFFF;
-        rcc.cfgr().write(|w: &mut stm32f103::rcc::cfgr::W| unsafe { w.bits(cfgr_value) });
+        rcc.cfgr().write(|w: &mut library::rcc::cfgr::W| unsafe { w.bits(cfgr_value) });
         
         // 禁用所有中断
-        rcc.cir().write(|w: &mut stm32f103::rcc::cir::W| unsafe { w.bits(0x009F0000) });
+        rcc.cir().write(|w: &mut library::rcc::cir::W| unsafe { w.bits(0x009F0000) });
     }
     
     /// 启用HSI（内部高速时钟）
@@ -196,7 +196,7 @@ impl RccDriver {
         
         let mut value = rcc.cr().read().bits();
         value |= (1 << 0);
-        rcc.cr().write(|w: &mut stm32f103::rcc::cr::W| unsafe { w.bits(value) });
+        rcc.cr().write(|w: &mut library::rcc::cr::W| unsafe { w.bits(value) });
         
         // 等待HSI就绪
         while (rcc.cr().read().bits() & (1 << 1)) == 0 {
@@ -209,7 +209,7 @@ impl RccDriver {
         let rcc = self.get_rcc();
         let mut value = rcc.cr().read().bits();
         value &= !(1 << 0);
-        rcc.cr().write(|w: &mut stm32f103::rcc::cr::W| unsafe { w.bits(value) });
+        rcc.cr().write(|w: &mut library::rcc::cr::W| unsafe { w.bits(value) });
     }
     
     /// 启用HSE（外部高速时钟）
@@ -218,7 +218,7 @@ impl RccDriver {
         
         let mut value = rcc.cr().read().bits();
         value |= (1 << 16);
-        rcc.cr().write(|w: &mut stm32f103::rcc::cr::W| unsafe { w.bits(value) });
+        rcc.cr().write(|w: &mut library::rcc::cr::W| unsafe { w.bits(value) });
         
         // 等待HSE就绪
         while (rcc.cr().read().bits() & (1 << 17)) == 0 {
@@ -242,7 +242,7 @@ impl RccDriver {
             value |= (1 << 18);
         }
         
-        rcc.cr().write(|w: &mut stm32f103::rcc::cr::W| unsafe { w.bits(value) });
+        rcc.cr().write(|w: &mut library::rcc::cr::W| unsafe { w.bits(value) });
         
         // 等待HSE就绪
         while (rcc.cr().read().bits() & (1 << 17)) == 0 {
@@ -255,7 +255,7 @@ impl RccDriver {
         let rcc = self.get_rcc();
         let mut value = rcc.cr().read().bits();
         value &= !(1 << 16);
-        rcc.cr().write(|w: &mut stm32f103::rcc::cr::W| unsafe { w.bits(value) });
+        rcc.cr().write(|w: &mut library::rcc::cr::W| unsafe { w.bits(value) });
     }
     
     /// 检查HSE是否处于旁路模式
@@ -270,7 +270,7 @@ impl RccDriver {
         
         let mut value = rcc.cr().read().bits();
         value |= (1 << 24);
-        rcc.cr().write(|w: &mut stm32f103::rcc::cr::W| unsafe { w.bits(value) });
+        rcc.cr().write(|w: &mut library::rcc::cr::W| unsafe { w.bits(value) });
         
         // 等待PLL就绪
         while (rcc.cr().read().bits() & (1 << 25)) == 0 {
@@ -283,7 +283,7 @@ impl RccDriver {
         let rcc = self.get_rcc();
         let mut value = rcc.cr().read().bits();
         value &= !(1 << 24);
-        rcc.cr().write(|w: &mut stm32f103::rcc::cr::W| unsafe { w.bits(value) });
+        rcc.cr().write(|w: &mut library::rcc::cr::W| unsafe { w.bits(value) });
     }
     
     /// 配置PLL
@@ -316,7 +316,7 @@ impl RccDriver {
         // 设置PLL倍频系数
         value |= (mul as u32) << 18;
         
-        rcc.cfgr().write(|w: &mut stm32f103::rcc::cfgr::W| unsafe { w.bits(value) });
+        rcc.cfgr().write(|w: &mut library::rcc::cfgr::W| unsafe { w.bits(value) });
     }
     
     /// 设置系统时钟源
@@ -343,7 +343,7 @@ impl RccDriver {
             }
         }
         
-        rcc.cfgr().write(|w: &mut stm32f103::rcc::cfgr::W| unsafe { w.bits(value) });
+        rcc.cfgr().write(|w: &mut library::rcc::cfgr::W| unsafe { w.bits(value) });
         
         // 等待系统时钟切换完成
         while {
@@ -419,7 +419,7 @@ impl RccDriver {
         // 设置HPRE位
         value |= (prescaler as u32) << 4;
         
-        rcc.cfgr().write(|w: &mut stm32f103::rcc::cfgr::W| unsafe { w.bits(value) });
+        rcc.cfgr().write(|w: &mut library::rcc::cfgr::W| unsafe { w.bits(value) });
     }
     
     /// 配置APB1预分频系数
@@ -433,7 +433,7 @@ impl RccDriver {
         // 设置PPRE1位
         value |= (prescaler as u32) << 8;
         
-        rcc.cfgr().write(|w: &mut stm32f103::rcc::cfgr::W| unsafe { w.bits(value) });
+        rcc.cfgr().write(|w: &mut library::rcc::cfgr::W| unsafe { w.bits(value) });
     }
     
     /// 配置APB2预分频系数
@@ -447,7 +447,7 @@ impl RccDriver {
         // 设置PPRE2位
         value |= (prescaler as u32) << 11;
         
-        rcc.cfgr().write(|w: &mut stm32f103::rcc::cfgr::W| unsafe { w.bits(value) });
+        rcc.cfgr().write(|w: &mut library::rcc::cfgr::W| unsafe { w.bits(value) });
     }
     
     /// 启用AHB外设时钟
@@ -455,7 +455,7 @@ impl RccDriver {
         let rcc = self.get_rcc();
         let mut value = rcc.ahbenr().read().bits();
         value |= peripheral as u32;
-        rcc.ahbenr().write(|w: &mut stm32f103::rcc::ahbenr::W| unsafe { w.bits(value) });
+        rcc.ahbenr().write(|w: &mut library::rcc::ahbenr::W| unsafe { w.bits(value) });
     }
     
     /// 禁用AHB外设时钟
@@ -463,7 +463,7 @@ impl RccDriver {
         let rcc = self.get_rcc();
         let mut value = rcc.ahbenr().read().bits();
         value &= !(peripheral as u32);
-        rcc.ahbenr().write(|w: &mut stm32f103::rcc::ahbenr::W| unsafe { w.bits(value) });
+        rcc.ahbenr().write(|w: &mut library::rcc::ahbenr::W| unsafe { w.bits(value) });
     }
     
     /// 启用APB1外设时钟
@@ -471,7 +471,7 @@ impl RccDriver {
         let rcc = self.get_rcc();
         let mut value = rcc.apb1enr().read().bits();
         value |= peripheral as u32;
-        rcc.apb1enr().write(|w: &mut stm32f103::rcc::apb1enr::W| unsafe { w.bits(value) });
+        rcc.apb1enr().write(|w: &mut library::rcc::apb1enr::W| unsafe { w.bits(value) });
     }
     
     /// 禁用APB1外设时钟
@@ -479,7 +479,7 @@ impl RccDriver {
         let rcc = self.get_rcc();
         let mut value = rcc.apb1enr().read().bits();
         value &= !(peripheral as u32);
-        rcc.apb1enr().write(|w: &mut stm32f103::rcc::apb1enr::W| unsafe { w.bits(value) });
+        rcc.apb1enr().write(|w: &mut library::rcc::apb1enr::W| unsafe { w.bits(value) });
     }
     
     /// 启用APB2外设时钟
@@ -487,7 +487,7 @@ impl RccDriver {
         let rcc = self.get_rcc();
         let mut value = rcc.apb2enr().read().bits();
         value |= peripheral as u32;
-        rcc.apb2enr().write(|w: &mut stm32f103::rcc::apb2enr::W| unsafe { w.bits(value) });
+        rcc.apb2enr().write(|w: &mut library::rcc::apb2enr::W| unsafe { w.bits(value) });
     }
     
     /// 禁用APB2外设时钟
@@ -495,21 +495,21 @@ impl RccDriver {
         let rcc = self.get_rcc();
         let mut value = rcc.apb2enr().read().bits();
         value &= !(peripheral as u32);
-        rcc.apb2enr().write(|w: &mut stm32f103::rcc::apb2enr::W| unsafe { w.bits(value) });
+        rcc.apb2enr().write(|w: &mut library::rcc::apb2enr::W| unsafe { w.bits(value) });
     }
     
     /// 复位APB1外设
     pub unsafe fn reset_apb1_peripheral(&self, peripheral: Apb1Peripheral) {
         let rcc = self.get_rcc();
-        rcc.apb1rstr().write(|w: &mut stm32f103::rcc::apb1rstr::W| unsafe { w.bits(peripheral as u32) });
-        rcc.apb1rstr().write(|w: &mut stm32f103::rcc::apb1rstr::W| unsafe { w.bits(0) });
+        rcc.apb1rstr().write(|w: &mut library::rcc::apb1rstr::W| unsafe { w.bits(peripheral as u32) });
+        rcc.apb1rstr().write(|w: &mut library::rcc::apb1rstr::W| unsafe { w.bits(0) });
     }
     
     /// 复位APB2外设
     pub unsafe fn reset_apb2_peripheral(&self, peripheral: Apb2Peripheral) {
         let rcc = self.get_rcc();
-        rcc.apb2rstr().write(|w: &mut stm32f103::rcc::apb2rstr::W| unsafe { w.bits(peripheral as u32) });
-        rcc.apb2rstr().write(|w: &mut stm32f103::rcc::apb2rstr::W| unsafe { w.bits(0) });
+        rcc.apb2rstr().write(|w: &mut library::rcc::apb2rstr::W| unsafe { w.bits(peripheral as u32) });
+        rcc.apb2rstr().write(|w: &mut library::rcc::apb2rstr::W| unsafe { w.bits(0) });
     }
     
     /// 获取系统时钟频率
@@ -695,7 +695,7 @@ impl RccDriver {
             }
         }
         
-        rcc.cfgr().write(|w: &mut stm32f103::rcc::cfgr::W| unsafe { w.bits(value) });
+        rcc.cfgr().write(|w: &mut library::rcc::cfgr::W| unsafe { w.bits(value) });
     }
     
     /// 配置ADC时钟
@@ -732,7 +732,7 @@ impl RccDriver {
             }
         }
         
-        rcc.cfgr().write(|w: &mut stm32f103::rcc::cfgr::W| unsafe { w.bits(value) });
+        rcc.cfgr().write(|w: &mut library::rcc::cfgr::W| unsafe { w.bits(value) });
     }
     
     /// 配置MCO（微控制器时钟输出）
@@ -786,7 +786,7 @@ impl RccDriver {
             }
         }
         
-        rcc.cfgr().write(|w: &mut stm32f103::rcc::cfgr::W| unsafe { w.bits(value) });
+        rcc.cfgr().write(|w: &mut library::rcc::cfgr::W| unsafe { w.bits(value) });
     }
     
     /// 启用HSI就绪中断
@@ -794,7 +794,7 @@ impl RccDriver {
         let rcc = self.get_rcc();
         let mut value = rcc.cir().read().bits();
         value |= 0x00000001; // 置位HSIRDYIE位
-        rcc.cir().write(|w: &mut stm32f103::rcc::cir::W| unsafe { w.bits(value) });
+        rcc.cir().write(|w: &mut library::rcc::cir::W| unsafe { w.bits(value) });
     }
     
     /// 禁用HSI就绪中断
@@ -802,7 +802,7 @@ impl RccDriver {
         let rcc = self.get_rcc();
         let mut value = rcc.cir().read().bits();
         value &= !0x00000001; // 清除HSIRDYIE位
-        rcc.cir().write(|w: &mut stm32f103::rcc::cir::W| unsafe { w.bits(value) });
+        rcc.cir().write(|w: &mut library::rcc::cir::W| unsafe { w.bits(value) });
     }
     
     /// 启用HSE就绪中断
@@ -810,7 +810,7 @@ impl RccDriver {
         let rcc = self.get_rcc();
         let mut value = rcc.cir().read().bits();
         value |= 0x00000008; // 置位HSERDYIE位
-        rcc.cir().write(|w: &mut stm32f103::rcc::cir::W| unsafe { w.bits(value) });
+        rcc.cir().write(|w: &mut library::rcc::cir::W| unsafe { w.bits(value) });
     }
     
     /// 禁用HSE就绪中断
@@ -818,7 +818,7 @@ impl RccDriver {
         let rcc = self.get_rcc();
         let mut value = rcc.cir().read().bits();
         value &= !0x00000008; // 清除HSERDYIE位
-        rcc.cir().write(|w: &mut stm32f103::rcc::cir::W| unsafe { w.bits(value) });
+        rcc.cir().write(|w: &mut library::rcc::cir::W| unsafe { w.bits(value) });
     }
     
     /// 启用PLL就绪中断
@@ -826,7 +826,7 @@ impl RccDriver {
         let rcc = self.get_rcc();
         let mut value = rcc.cir().read().bits();
         value |= 0x00000020; // 置位PLLRDYIE位
-        rcc.cir().write(|w: &mut stm32f103::rcc::cir::W| unsafe { w.bits(value) });
+        rcc.cir().write(|w: &mut library::rcc::cir::W| unsafe { w.bits(value) });
     }
     
     /// 禁用PLL就绪中断
@@ -834,7 +834,7 @@ impl RccDriver {
         let rcc = self.get_rcc();
         let mut value = rcc.cir().read().bits();
         value &= !0x00000020; // 清除PLLRDYIE位
-        rcc.cir().write(|w: &mut stm32f103::rcc::cir::W| unsafe { w.bits(value) });
+        rcc.cir().write(|w: &mut library::rcc::cir::W| unsafe { w.bits(value) });
     }
     
     /// 启用时钟安全系统（CSS）
@@ -843,7 +843,7 @@ impl RccDriver {
         let rcc = self.get_rcc();
         let mut value = rcc.cr().read().bits();
         value |= 0x00000080; // 置位CSSON位
-        rcc.cr().write(|w: &mut stm32f103::rcc::cr::W| unsafe { w.bits(value) });
+        rcc.cr().write(|w: &mut library::rcc::cr::W| unsafe { w.bits(value) });
     }
     
     /// 禁用时钟安全系统（CSS）
@@ -851,14 +851,14 @@ impl RccDriver {
         let rcc = self.get_rcc();
         let mut value = rcc.cr().read().bits();
         value &= !0x00000080; // 清除CSSON位
-        rcc.cr().write(|w: &mut stm32f103::rcc::cr::W| unsafe { w.bits(value) });
+        rcc.cr().write(|w: &mut library::rcc::cr::W| unsafe { w.bits(value) });
     }
     
     /// 清除所有时钟中断标志
     pub unsafe fn clear_all_interrupt_flags(&self) {
         let rcc = self.get_rcc();
         // 写入1清除所有中断标志
-        rcc.cir().write(|w: &mut stm32f103::rcc::cir::W| unsafe { w.bits(0x009F0000) });
+        rcc.cir().write(|w: &mut library::rcc::cir::W| unsafe { w.bits(0x009F0000) });
     }
     
     /// 调整HSI校准值
@@ -876,7 +876,7 @@ impl RccDriver {
         value &= !0x000000F8;
         // 设置新的校准值
         value |= (calibration_value as u32) << 3;
-        rcc.cr().write(|w: &mut stm32f103::rcc::cr::W| unsafe { w.bits(value) });
+        rcc.cr().write(|w: &mut library::rcc::cr::W| unsafe { w.bits(value) });
     }
     
     /// 配置RTC时钟源
@@ -886,8 +886,8 @@ impl RccDriver {
         self.enable_apb1_peripheral(Apb1Peripheral::BKP);
         
         // 解锁备份域访问
-        let pwr = &mut *(0x40007000 as *mut stm32f103::Pwr);
-        pwr.cr().write(|w: &mut stm32f103::pwr::cr::W| unsafe { w.bits(0x10) });
+        let pwr = &mut *(0x40007000 as *mut library::Pwr);
+        pwr.cr().write(|w: &mut library::pwr::cr::W| unsafe { w.bits(0x10) });
         
         let rcc = self.get_rcc();
         
@@ -932,7 +932,7 @@ impl RccDriver {
         }
         
         // 锁定备份域访问
-        pwr.cr().write(|w: &mut stm32f103::pwr::cr::W| unsafe { w.bits(0x00) });
+        pwr.cr().write(|w: &mut library::pwr::cr::W| unsafe { w.bits(0x00) });
     }
     
     /// 清除RCC标志位
@@ -962,8 +962,8 @@ impl RccDriver {
         self.enable_apb1_peripheral(Apb1Peripheral::BKP);
         
         // 解锁备份域访问
-        let pwr = &mut *(0x40007000 as *mut stm32f103::Pwr);
-        pwr.cr().write(|w: &mut stm32f103::pwr::cr::W| unsafe { w.bits(0x10) });
+        let pwr = &mut *(0x40007000 as *mut library::Pwr);
+        pwr.cr().write(|w: &mut library::pwr::cr::W| unsafe { w.bits(0x10) });
         
         let rcc = self.get_rcc();
         
@@ -980,7 +980,7 @@ impl RccDriver {
         });
         
         // 锁定备份域访问
-        pwr.cr().write(|w: &mut stm32f103::pwr::cr::W| unsafe { w.bits(0x00) });
+        pwr.cr().write(|w: &mut library::pwr::cr::W| unsafe { w.bits(0x00) });
     }
     
     /// 启用LSI（内部低速时钟）
@@ -989,7 +989,7 @@ impl RccDriver {
         
         let mut value = rcc.csr().read().bits();
         value |= 0x00000001;
-        rcc.csr().write(|w: &mut stm32f103::rcc::csr::W| unsafe { w.bits(value) });
+        rcc.csr().write(|w: &mut library::rcc::csr::W| unsafe { w.bits(value) });
         
         // 等待LSI就绪
         while (rcc.csr().read().bits() & 0x00000002) == 0 {
@@ -1003,7 +1003,7 @@ impl RccDriver {
         
         let mut value = rcc.csr().read().bits();
         value &= !0x00000001;
-        rcc.csr().write(|w: &mut stm32f103::rcc::csr::W| unsafe { w.bits(value) });
+        rcc.csr().write(|w: &mut library::rcc::csr::W| unsafe { w.bits(value) });
     }
     
     /// 检查LSI是否就绪
@@ -1020,14 +1020,14 @@ impl RccDriver {
         self.enable_apb1_peripheral(Apb1Peripheral::BKP);
         
         // 解锁备份域访问
-        let pwr = &mut *(0x40007000 as *mut stm32f103::Pwr);
-        pwr.cr().write(|w: &mut stm32f103::pwr::cr::W| unsafe { w.bits(0x10) });
+        let pwr = &mut *(0x40007000 as *mut library::Pwr);
+        pwr.cr().write(|w: &mut library::pwr::cr::W| unsafe { w.bits(0x10) });
         
         // 注意：当前stm32f103库可能不支持bdcr寄存器访问
         // 这里暂时省略LSE启用操作
         
         // 锁定备份域访问
-        pwr.cr().write(|w: &mut stm32f103::pwr::cr::W| unsafe { w.bits(0x00) });
+        pwr.cr().write(|w: &mut library::pwr::cr::W| unsafe { w.bits(0x00) });
     }
     
     /// 禁用LSE（外部低速时钟）
@@ -1038,14 +1038,14 @@ impl RccDriver {
         self.enable_apb1_peripheral(Apb1Peripheral::BKP);
         
         // 解锁备份域访问
-        let pwr = &mut *(0x40007000 as *mut stm32f103::Pwr);
-        pwr.cr().write(|w: &mut stm32f103::pwr::cr::W| unsafe { w.bits(0x10) });
+        let pwr = &mut *(0x40007000 as *mut library::Pwr);
+        pwr.cr().write(|w: &mut library::pwr::cr::W| unsafe { w.bits(0x10) });
         
         // 注意：当前stm32f103库可能不支持bdcr寄存器访问
         // 这里暂时省略LSE禁用操作
         
         // 锁定备份域访问
-        pwr.cr().write(|w: &mut stm32f103::pwr::cr::W| unsafe { w.bits(0x00) });
+        pwr.cr().write(|w: &mut library::pwr::cr::W| unsafe { w.bits(0x00) });
     }
     
     /// 检查LSE是否就绪

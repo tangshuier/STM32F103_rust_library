@@ -1,11 +1,11 @@
-//! GPIO模块
+﻿//! GPIO模块
 //! 提供GPIO引脚的封装和操作
 
 // 屏蔽未使用代码警告
 #![allow(unused)]
 
 // 使用内部生成的设备驱动库
-use stm32f103::*;
+use library::*;
 use core::marker::PhantomData;
 use core::fmt::Debug;
 
@@ -1302,7 +1302,7 @@ pub const PG15: GpioPortStruct = GpioPortStruct { port: GpioPort::G, pin: 15 };
 /// - 调用者必须确保重映射配置不会与其他外设冲突
 /// - 某些重映射可能需要同时配置相关GPIO引脚为复用功能
 pub unsafe fn gpio_pin_remap_config(remap: GpioRemap, enable: bool) {
-    let afio = &mut *(0x40010000 as *mut stm32f103::afio::RegisterBlock);
+    let afio = &mut *(0x40010000 as *mut library::afio::RegisterBlock);
     
     match remap {
         GpioRemap::RemapSPI1 => {
@@ -1754,7 +1754,7 @@ pub enum GpioRemap {
 /// - 此函数会重置所有AFIO配置，包括重映射和EXTI配置
 /// - 调用后需要重新配置所有必要的AFIO功能
 pub unsafe fn gpio_afio_deinit() {
-    let rcc = &mut *(0x40021000 as *mut stm32f103::rcc::RegisterBlock);
+    let rcc = &mut *(0x40021000 as *mut library::rcc::RegisterBlock);
     
     // 使能AFIO复位
     rcc.apb2rstr().write(|w| unsafe { w.bits(1 << 0) });
@@ -1846,7 +1846,7 @@ pub unsafe fn gpio_init(port: GpioPort, config: GpioInitConfig) {
 /// - 调用者必须确保pin_source在0-15范围内
 /// - 配置后需要在EXTI控制器中设置对应的中断触发条件
 pub unsafe fn gpio_exti_line_config(port_source: GpioPort, pin_source: u8) {
-    let afio = &mut *(0x40010000 as *mut stm32f103::afio::RegisterBlock);
+    let afio = &mut *(0x40010000 as *mut library::afio::RegisterBlock);
     
     // 确保pin_source在0-15范围内
     assert!(pin_source < 16, "Pin source must be between 0 and 15");

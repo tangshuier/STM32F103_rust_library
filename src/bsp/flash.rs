@@ -1,10 +1,10 @@
-//! FLASH模块
+﻿//! FLASH模块
 //! 提供闪存读写和擦除功能封装
 
 #![allow(unused)]
 
 // 使用内部生成的设备驱动库
-use stm32f103::*;
+use library::*;
 
 // 闪存密钥
 const FLASH_KEY1: u32 = 0x45670123;
@@ -48,38 +48,38 @@ impl FlashDriver {
     }
     
     /// 获取FLASH寄存器块
-    unsafe fn get_flash(&self) -> &'static mut stm32f103::flash::RegisterBlock {
-        &mut *(0x40022000 as *mut stm32f103::flash::RegisterBlock)
+    unsafe fn get_flash(&self) -> &'static mut library::flash::RegisterBlock {
+        &mut *(0x40022000 as *mut library::flash::RegisterBlock)
     }
     
     /// 解锁FLASH
     pub unsafe fn unlock(&self) {
         let flash = self.get_flash();
         // 写入第一个密钥
-        flash.keyr().write(|w: &mut stm32f103::flash::keyr::W| unsafe { w.bits(FLASH_KEY1) });
+        flash.keyr().write(|w: &mut library::flash::keyr::W| unsafe { w.bits(FLASH_KEY1) });
         // 写入第二个密钥
-        flash.keyr().write(|w: &mut stm32f103::flash::keyr::W| unsafe { w.bits(FLASH_KEY2) });
+        flash.keyr().write(|w: &mut library::flash::keyr::W| unsafe { w.bits(FLASH_KEY2) });
     }
     
     /// 锁定FLASH
     pub unsafe fn lock(&self) {
         let flash = self.get_flash();
-        flash.cr().write(|w: &mut stm32f103::flash::cr::W| unsafe { w.bits(flash.cr().read().bits() | (1 << 7)) });
+        flash.cr().write(|w: &mut library::flash::cr::W| unsafe { w.bits(flash.cr().read().bits() | (1 << 7)) });
     }
     
     /// 解锁选项字节
     pub unsafe fn unlock_option_bytes(&self) {
         let flash = self.get_flash();
         // 写入第一个密钥
-        flash.optkeyr().write(|w: &mut stm32f103::flash::optkeyr::W| unsafe { w.bits(0x08192A3B) });
+        flash.optkeyr().write(|w: &mut library::flash::optkeyr::W| unsafe { w.bits(0x08192A3B) });
         // 写入第二个密钥
-        flash.optkeyr().write(|w: &mut stm32f103::flash::optkeyr::W| unsafe { w.bits(0x4C5D6E7F) });
+        flash.optkeyr().write(|w: &mut library::flash::optkeyr::W| unsafe { w.bits(0x4C5D6E7F) });
     }
     
     /// 锁定选项字节
     pub unsafe fn lock_option_bytes(&self) {
         let flash = self.get_flash();
-        flash.cr().write(|w: &mut stm32f103::flash::cr::W| unsafe { w.bits(flash.cr().read().bits() | (1 << 9)) });
+        flash.cr().write(|w: &mut library::flash::cr::W| unsafe { w.bits(flash.cr().read().bits() | (1 << 9)) });
     }
     
     /// 设置FLASH等待周期
@@ -90,19 +90,19 @@ impl FlashDriver {
         value &= !(0x03 << 0);
         // 设置等待周期
         value |= (latency as u32) << 0;
-        flash.acr().write(|w: &mut stm32f103::flash::acr::W| unsafe { w.bits(value) });
+        flash.acr().write(|w: &mut library::flash::acr::W| unsafe { w.bits(value) });
     }
     
     /// 启用FLASH预取缓冲区
     pub unsafe fn enable_prefetch(&self) {
         let flash = self.get_flash();
-        flash.acr().write(|w: &mut stm32f103::flash::acr::W| unsafe { w.bits(flash.acr().read().bits() | (1 << 4)) });
+        flash.acr().write(|w: &mut library::flash::acr::W| unsafe { w.bits(flash.acr().read().bits() | (1 << 4)) });
     }
     
     /// 禁用FLASH预取缓冲区
     pub unsafe fn disable_prefetch(&self) {
         let flash = self.get_flash();
-        flash.acr().write(|w: &mut stm32f103::flash::acr::W| unsafe { w.bits(flash.acr().read().bits() & !(1 << 4)) });
+        flash.acr().write(|w: &mut library::flash::acr::W| unsafe { w.bits(flash.acr().read().bits() & !(1 << 4)) });
     }
     
     /// 擦除FLASH扇区
@@ -115,11 +115,11 @@ impl FlashDriver {
         }
         
         // 设置扇区擦除位
-        flash.cr().write(|w: &mut stm32f103::flash::cr::W| unsafe { w.bits(flash.cr().read().bits() | (1 << 1)) });
+        flash.cr().write(|w: &mut library::flash::cr::W| unsafe { w.bits(flash.cr().read().bits() | (1 << 1)) });
         // 设置扇区编号
-        flash.cr().write(|w: &mut stm32f103::flash::cr::W| unsafe { w.bits((flash.cr().read().bits() & !(0x0F << 3)) | ((sector as u32) & 0x0F) << 3) });
+        flash.cr().write(|w: &mut library::flash::cr::W| unsafe { w.bits((flash.cr().read().bits() & !(0x0F << 3)) | ((sector as u32) & 0x0F) << 3) });
         // 开始擦除
-        flash.cr().write(|w: &mut stm32f103::flash::cr::W| unsafe { w.bits(flash.cr().read().bits() | (1 << 6)) });
+        flash.cr().write(|w: &mut library::flash::cr::W| unsafe { w.bits(flash.cr().read().bits() | (1 << 6)) });
         
         // 等待忙标志清除
         while self.is_busy() {
@@ -127,7 +127,7 @@ impl FlashDriver {
         }
         
         // 清除扇区擦除位
-        flash.cr().write(|w: &mut stm32f103::flash::cr::W| unsafe { w.bits(flash.cr().read().bits() & !(1 << 1)) });
+        flash.cr().write(|w: &mut library::flash::cr::W| unsafe { w.bits(flash.cr().read().bits() & !(1 << 1)) });
     }
     
     /// 整片擦除FLASH
@@ -140,9 +140,9 @@ impl FlashDriver {
         }
         
         // 设置整片擦除位
-        flash.cr().write(|w: &mut stm32f103::flash::cr::W| unsafe { w.bits(flash.cr().read().bits() | (1 << 2)) });
+        flash.cr().write(|w: &mut library::flash::cr::W| unsafe { w.bits(flash.cr().read().bits() | (1 << 2)) });
         // 开始擦除
-        flash.cr().write(|w: &mut stm32f103::flash::cr::W| unsafe { w.bits(flash.cr().read().bits() | (1 << 6)) });
+        flash.cr().write(|w: &mut library::flash::cr::W| unsafe { w.bits(flash.cr().read().bits() | (1 << 6)) });
         
         // 等待忙标志清除
         while self.is_busy() {
@@ -150,7 +150,7 @@ impl FlashDriver {
         }
         
         // 清除整片擦除位
-        flash.cr().write(|w: &mut stm32f103::flash::cr::W| unsafe { w.bits(flash.cr().read().bits() & !(1 << 2)) });
+        flash.cr().write(|w: &mut library::flash::cr::W| unsafe { w.bits(flash.cr().read().bits() & !(1 << 2)) });
     }
     
     /// 写入半字到FLASH
@@ -163,7 +163,7 @@ impl FlashDriver {
         }
         
         // 设置编程位
-        flash.cr().write(|w: &mut stm32f103::flash::cr::W| unsafe { w.bits(flash.cr().read().bits() | (1 << 0)) });
+        flash.cr().write(|w: &mut library::flash::cr::W| unsafe { w.bits(flash.cr().read().bits() | (1 << 0)) });
         
         // 写入数据
         *(address as *mut u16) = data;
@@ -174,7 +174,7 @@ impl FlashDriver {
         }
         
         // 清除编程位
-        flash.cr().write(|w: &mut stm32f103::flash::cr::W| unsafe { w.bits(flash.cr().read().bits() & !(1 << 0)) });
+        flash.cr().write(|w: &mut library::flash::cr::W| unsafe { w.bits(flash.cr().read().bits() & !(1 << 0)) });
     }
     
     /// 写入字到FLASH
@@ -259,7 +259,7 @@ impl FlashDriver {
     /// 清除所有错误标志
     pub unsafe fn clear_error_flags(&self) {
         let flash = self.get_flash();
-        flash.sr().write(|w: &mut stm32f103::flash::sr::W| unsafe { w.bits(flash.sr().read().bits() & !(0x0E << 1)) });
+        flash.sr().write(|w: &mut library::flash::sr::W| unsafe { w.bits(flash.sr().read().bits() & !(0x0E << 1)) });
     }
     
     /// 获取选项字节值

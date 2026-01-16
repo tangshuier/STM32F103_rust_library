@@ -1,10 +1,10 @@
-//! WWDG模块
+﻿//! WWDG模块
 //! 提供窗口看门狗功能封装
 
 #![allow(unused)]
 
 // 导入内部生成的设备驱动库
-use stm32f103::*;
+use library::*;
 
 /// WWDG预分频系数枚举
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -25,8 +25,8 @@ impl Wwdg {
     }
     
     /// 获取WWDG寄存器块
-    unsafe fn wwdg() -> &'static mut stm32f103::wwdg::RegisterBlock {
-        &mut *(0x40002C00 as *mut stm32f103::wwdg::RegisterBlock)
+    unsafe fn wwdg() -> &'static mut library::wwdg::RegisterBlock {
+        &mut *(0x40002C00 as *mut library::wwdg::RegisterBlock)
     }
     
     /// 初始化WWDG
@@ -43,14 +43,14 @@ impl Wwdg {
         let wwdg = Wwdg::wwdg();
         
         // 配置预分频系数和窗口值
-        wwdg.cfr().write(|w: &mut stm32f103::wwdg::cfr::W| unsafe {
+        wwdg.cfr().write(|w: &mut library::wwdg::cfr::W| unsafe {
             w
                 .wdgtb().bits(prescaler as u8)
                 .w().bits(window)
         });
         
         // 设置计数器值并启用WWDG
-        wwdg.cr().write(|w: &mut stm32f103::wwdg::cr::W| unsafe {
+        wwdg.cr().write(|w: &mut library::wwdg::cr::W| unsafe {
             w
                 .t().bits(counter)
                 .wdga().set_bit()
@@ -68,7 +68,7 @@ impl Wwdg {
         let wwdg = Wwdg::wwdg();
         
         // 设置窗口值
-        wwdg.cfr().modify(|_, w: &mut stm32f103::wwdg::cfr::W| unsafe {
+        wwdg.cfr().modify(|_, w: &mut library::wwdg::cfr::W| unsafe {
             w.w().bits(window)
         });
     }
@@ -81,7 +81,7 @@ impl Wwdg {
         let wwdg = Wwdg::wwdg();
         
         // 设置预分频系数
-        wwdg.cfr().modify(|_, w: &mut stm32f103::wwdg::cfr::W| unsafe {
+        wwdg.cfr().modify(|_, w: &mut library::wwdg::cfr::W| unsafe {
             w.wdgtb().bits(prescaler as u8)
         });
     }
@@ -97,7 +97,7 @@ impl Wwdg {
         let wwdg = Wwdg::wwdg();
         
         // 设置计数器值
-        wwdg.cr().modify(|_, w: &mut stm32f103::wwdg::cr::W| unsafe {
+        wwdg.cr().modify(|_, w: &mut library::wwdg::cr::W| unsafe {
             w.t().bits(counter)
         });
     }
@@ -119,7 +119,7 @@ impl Wwdg {
     /// 启用早期唤醒中断
     pub unsafe fn enable_ewi(&self) {
         let wwdg = Wwdg::wwdg();
-        wwdg.cfr().modify(|_, w: &mut stm32f103::wwdg::cfr::W| {
+        wwdg.cfr().modify(|_, w: &mut library::wwdg::cfr::W| {
             w.ewi().set_bit()
         });
     }
@@ -127,7 +127,7 @@ impl Wwdg {
     /// 禁用早期唤醒中断
     pub unsafe fn disable_ewi(&self) {
         let wwdg = Wwdg::wwdg();
-        wwdg.cfr().modify(|_, w: &mut stm32f103::wwdg::cfr::W| {
+        wwdg.cfr().modify(|_, w: &mut library::wwdg::cfr::W| {
             w.ewi().clear_bit()
         });
     }
@@ -135,7 +135,7 @@ impl Wwdg {
     /// 清除早期唤醒中断标志
     pub unsafe fn clear_ewi_flag(&self) {
         let wwdg = Wwdg::wwdg();
-        wwdg.sr().write(|w: &mut stm32f103::wwdg::sr::W| {
+        wwdg.sr().write(|w: &mut library::wwdg::sr::W| {
             w.ewi().clear_bit()
         });
     }

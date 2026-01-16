@@ -1,10 +1,10 @@
-//! CEC模块
+﻿//! CEC模块
 //! 提供消费电子控制功能封装
 
 #![allow(unused)]
 
 // 导入内部生成的设备驱动库
-use stm32f103::*;
+use library::*;
 
 /// CEC位时间配置枚举
 #[derive(Debug, Clone, Copy, PartialEq)]

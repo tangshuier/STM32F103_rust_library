@@ -1,10 +1,10 @@
-//! FSMC模块
+﻿//! FSMC模块
 //! 提供灵活的静态存储器控制器功能封装
 
 #![allow(unused)]
 
 // 导入内部生成的设备驱动库
-use stm32f103::*;
+use library::*;
 
 /// FSMC存储区域枚举
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -41,8 +41,8 @@ impl Fsmc {
     }
     
     /// 获取FSMC寄存器块
-    unsafe fn fsmc() -> &'static mut stm32f103::fsmc::RegisterBlock {
-        &mut *(0xA0000000 as *mut stm32f103::fsmc::RegisterBlock)
+    unsafe fn fsmc() -> &'static mut library::fsmc::RegisterBlock {
+        &mut *(0xA0000000 as *mut library::fsmc::RegisterBlock)
     }
     
     /// 初始化FSMC存储区域
@@ -69,10 +69,10 @@ impl Fsmc {
         match bank {
             FsmcBank::Bank1 => {
                 // 重置BCR寄存器
-                fsmc.bcr1().write(|w: &mut stm32f103::fsmc::bcr1::W| unsafe { w.bits(0x00000000) });
+                fsmc.bcr1().write(|w: &mut library::fsmc::bcr1::W| unsafe { w.bits(0x00000000) });
                 
                 // 配置存储器类型和数据总线宽度
-                fsmc.bcr1().write(|w: &mut stm32f103::fsmc::bcr1::W| unsafe { 
+                fsmc.bcr1().write(|w: &mut library::fsmc::bcr1::W| unsafe { 
                     w.bits(
                         ((mem_type as u32) << 4) |
                         ((data_width as u32) << 1) |
@@ -81,7 +81,7 @@ impl Fsmc {
                 });
                 
                 // 配置时序参数
-                fsmc.btr1().write(|w: &mut stm32f103::fsmc::btr1::W| unsafe { 
+                fsmc.btr1().write(|w: &mut library::fsmc::btr1::W| unsafe { 
                     w.bits(
                         ((address_setup_time as u32) << 0) |
                         ((address_hold_time as u32) << 4) |
@@ -91,10 +91,10 @@ impl Fsmc {
             },
             FsmcBank::Bank2 => {
                 // 重置BCR寄存器
-                fsmc.bcr2().write(|w: &mut stm32f103::fsmc::bcr2::W| unsafe { w.bits(0x00000000) });
+                fsmc.bcr2().write(|w: &mut library::fsmc::bcr2::W| unsafe { w.bits(0x00000000) });
                 
                 // 配置存储器类型和数据总线宽度
-                fsmc.bcr2().write(|w: &mut stm32f103::fsmc::bcr2::W| unsafe { 
+                fsmc.bcr2().write(|w: &mut library::fsmc::bcr2::W| unsafe { 
                     w.bits(
                         ((mem_type as u32) << 4) |
                         ((data_width as u32) << 1) |
@@ -103,7 +103,7 @@ impl Fsmc {
                 });
                 
                 // 配置时序参数
-                fsmc.btr2().write(|w: &mut stm32f103::fsmc::btr2::W| unsafe { 
+                fsmc.btr2().write(|w: &mut library::fsmc::btr2::W| unsafe { 
                     w.bits(
                         ((address_setup_time as u32) << 0) |
                         ((address_hold_time as u32) << 4) |
@@ -113,10 +113,10 @@ impl Fsmc {
             },
             FsmcBank::Bank3 => {
                 // 重置BCR寄存器
-                fsmc.bcr3().write(|w: &mut stm32f103::fsmc::bcr3::W| unsafe { w.bits(0x00000000) });
+                fsmc.bcr3().write(|w: &mut library::fsmc::bcr3::W| unsafe { w.bits(0x00000000) });
                 
                 // 配置存储器类型和数据总线宽度
-                fsmc.bcr3().write(|w: &mut stm32f103::fsmc::bcr3::W| unsafe { 
+                fsmc.bcr3().write(|w: &mut library::fsmc::bcr3::W| unsafe { 
                     w.bits(
                         ((mem_type as u32) << 4) |
                         ((data_width as u32) << 1) |
@@ -125,7 +125,7 @@ impl Fsmc {
                 });
                 
                 // 配置时序参数
-                fsmc.btr3().write(|w: &mut stm32f103::fsmc::btr3::W| unsafe { 
+                fsmc.btr3().write(|w: &mut library::fsmc::btr3::W| unsafe { 
                     w.bits(
                         ((address_setup_time as u32) << 0) |
                         ((address_hold_time as u32) << 4) |
@@ -135,10 +135,10 @@ impl Fsmc {
             },
             FsmcBank::Bank4 => {
                 // 重置BCR寄存器
-                fsmc.bcr4().write(|w: &mut stm32f103::fsmc::bcr4::W| unsafe { w.bits(0x00000000) });
+                fsmc.bcr4().write(|w: &mut library::fsmc::bcr4::W| unsafe { w.bits(0x00000000) });
                 
                 // 配置存储器类型和数据总线宽度
-                fsmc.bcr4().write(|w: &mut stm32f103::fsmc::bcr4::W| unsafe { 
+                fsmc.bcr4().write(|w: &mut library::fsmc::bcr4::W| unsafe { 
                     w.bits(
                         ((mem_type as u32) << 4) |
                         ((data_width as u32) << 1) |
@@ -147,7 +147,7 @@ impl Fsmc {
                 });
                 
                 // 配置时序参数
-                fsmc.btr4().write(|w: &mut stm32f103::fsmc::btr4::W| unsafe { 
+                fsmc.btr4().write(|w: &mut library::fsmc::btr4::W| unsafe { 
                     w.bits(
                         ((address_setup_time as u32) << 0) |
                         ((address_hold_time as u32) << 4) |
@@ -178,7 +178,7 @@ impl Fsmc {
         match bank {
             FsmcBank::Bank1 => {
                 // 配置写时序参数
-                fsmc.bwtr1().write(|w: &mut stm32f103::fsmc::bwtr1::W| unsafe { 
+                fsmc.bwtr1().write(|w: &mut library::fsmc::bwtr1::W| unsafe { 
                     w.bits(
                         ((address_setup_time as u32) << 0) |
                         ((address_hold_time as u32) << 4) |
@@ -189,7 +189,7 @@ impl Fsmc {
             },
             FsmcBank::Bank2 => {
                 // 配置写时序参数
-                fsmc.bwtr2().write(|w: &mut stm32f103::fsmc::bwtr2::W| unsafe { 
+                fsmc.bwtr2().write(|w: &mut library::fsmc::bwtr2::W| unsafe { 
                     w.bits(
                         ((address_setup_time as u32) << 0) |
                         ((address_hold_time as u32) << 4) |
@@ -200,7 +200,7 @@ impl Fsmc {
             },
             FsmcBank::Bank3 => {
                 // 配置写时序参数
-                fsmc.bwtr3().write(|w: &mut stm32f103::fsmc::bwtr3::W| unsafe { 
+                fsmc.bwtr3().write(|w: &mut library::fsmc::bwtr3::W| unsafe { 
                     w.bits(
                         ((address_setup_time as u32) << 0) |
                         ((address_hold_time as u32) << 4) |
@@ -211,7 +211,7 @@ impl Fsmc {
             },
             FsmcBank::Bank4 => {
                 // 配置写时序参数
-                fsmc.bwtr4().write(|w: &mut stm32f103::fsmc::bwtr4::W| unsafe { 
+                fsmc.bwtr4().write(|w: &mut library::fsmc::bwtr4::W| unsafe { 
                     w.bits(
                         ((address_setup_time as u32) << 0) |
                         ((address_hold_time as u32) << 4) |
@@ -232,22 +232,22 @@ impl Fsmc {
         
         match bank {
             FsmcBank::Bank1 => {
-                fsmc.bcr1().modify(|r: &stm32f103::fsmc::bcr1::R, w: &mut stm32f103::fsmc::bcr1::W| unsafe { 
+                fsmc.bcr1().modify(|r: &library::fsmc::bcr1::R, w: &mut library::fsmc::bcr1::W| unsafe { 
                     w.bits(r.bits() | (1 << 0)) 
                 });
             },
             FsmcBank::Bank2 => {
-                fsmc.bcr2().modify(|r: &stm32f103::fsmc::bcr2::R, w: &mut stm32f103::fsmc::bcr2::W| unsafe { 
+                fsmc.bcr2().modify(|r: &library::fsmc::bcr2::R, w: &mut library::fsmc::bcr2::W| unsafe { 
                     w.bits(r.bits() | (1 << 0)) 
                 });
             },
             FsmcBank::Bank3 => {
-                fsmc.bcr3().modify(|r: &stm32f103::fsmc::bcr3::R, w: &mut stm32f103::fsmc::bcr3::W| unsafe { 
+                fsmc.bcr3().modify(|r: &library::fsmc::bcr3::R, w: &mut library::fsmc::bcr3::W| unsafe { 
                     w.bits(r.bits() | (1 << 0)) 
                 });
             },
             FsmcBank::Bank4 => {
-                fsmc.bcr4().modify(|r: &stm32f103::fsmc::bcr4::R, w: &mut stm32f103::fsmc::bcr4::W| unsafe { 
+                fsmc.bcr4().modify(|r: &library::fsmc::bcr4::R, w: &mut library::fsmc::bcr4::W| unsafe { 
                     w.bits(r.bits() | (1 << 0)) 
                 });
             },
@@ -263,22 +263,22 @@ impl Fsmc {
         
         match bank {
             FsmcBank::Bank1 => {
-                fsmc.bcr1().modify(|r: &stm32f103::fsmc::bcr1::R, w: &mut stm32f103::fsmc::bcr1::W| unsafe { 
+                fsmc.bcr1().modify(|r: &library::fsmc::bcr1::R, w: &mut library::fsmc::bcr1::W| unsafe { 
                     w.bits(r.bits() & !(1 << 0)) 
                 });
             },
             FsmcBank::Bank2 => {
-                fsmc.bcr2().modify(|r: &stm32f103::fsmc::bcr2::R, w: &mut stm32f103::fsmc::bcr2::W| unsafe { 
+                fsmc.bcr2().modify(|r: &library::fsmc::bcr2::R, w: &mut library::fsmc::bcr2::W| unsafe { 
                     w.bits(r.bits() & !(1 << 0)) 
                 });
             },
             FsmcBank::Bank3 => {
-                fsmc.bcr3().modify(|r: &stm32f103::fsmc::bcr3::R, w: &mut stm32f103::fsmc::bcr3::W| unsafe { 
+                fsmc.bcr3().modify(|r: &library::fsmc::bcr3::R, w: &mut library::fsmc::bcr3::W| unsafe { 
                     w.bits(r.bits() & !(1 << 0)) 
                 });
             },
             FsmcBank::Bank4 => {
-                fsmc.bcr4().modify(|r: &stm32f103::fsmc::bcr4::R, w: &mut stm32f103::fsmc::bcr4::W| unsafe { 
+                fsmc.bcr4().modify(|r: &library::fsmc::bcr4::R, w: &mut library::fsmc::bcr4::W| unsafe { 
                     w.bits(r.bits() & !(1 << 0)) 
                 });
             },

@@ -1,10 +1,10 @@
-//! DMA模块
+﻿//! DMA模块
 //! 提供直接内存访问功能封装
 
 #![allow(unused)]
 
 // 使用内部生成的设备驱动库
-use stm32f103::*;
+use library::*;
 
 /// DMA通道枚举
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -96,11 +96,11 @@ impl Dma {
     }
     
     /// 获取DMA寄存器块
-    unsafe fn get_dma(&self) -> &'static mut stm32f103::dma1::RegisterBlock {
+    unsafe fn get_dma(&self) -> &'static mut library::dma1::RegisterBlock {
         match self.dma_number {
-            1 => &mut *(0x40020000 as *mut stm32f103::dma1::RegisterBlock),
-            2 => &mut *(0x40020400 as *mut stm32f103::dma1::RegisterBlock),
-            _ => &mut *(0x40020000 as *mut stm32f103::dma1::RegisterBlock),
+            1 => &mut *(0x40020000 as *mut library::dma1::RegisterBlock),
+            2 => &mut *(0x40020400 as *mut library::dma1::RegisterBlock),
+            _ => &mut *(0x40020000 as *mut library::dma1::RegisterBlock),
         }
     }
     
@@ -155,7 +155,7 @@ impl Dma {
     pub unsafe fn clear_interrupt(&self, interrupt: DmaInterrupt) {
         let dma = self.get_dma();
         let channel_offset = self.channel as u32 * 4;
-        dma.ifcr().write(|w: &mut stm32f103::dma1::ifcr::W| unsafe { w.bits((interrupt as u32) << channel_offset) });
+        dma.ifcr().write(|w: &mut library::dma1::ifcr::W| unsafe { w.bits((interrupt as u32) << channel_offset) });
     }
     
     /// 获取剩余数据计数

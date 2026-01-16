@@ -1,10 +1,10 @@
-//! DBGMCU模块
+﻿//! DBGMCU模块
 //! 提供调试MCU功能封装
 
 #![allow(unused)]
 
 // 导入内部生成的设备驱动库
-use stm32f103::*;
+use library::*;
 
 /// DBGMCU结构体
 pub struct Dbgmcu;

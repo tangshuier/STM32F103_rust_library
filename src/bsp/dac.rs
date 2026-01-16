@@ -1,10 +1,10 @@
-//! DAC模块
+﻿//! DAC模块
 //! 提供数模转换器功能封装
 
 #![allow(unused)]
 
 // 导入内部生成的设备驱动库
-use stm32f103::*;
+use library::*;
 
 /// DAC通道枚举
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -35,13 +35,13 @@ impl Dac {
     }
     
     /// 获取DAC寄存器块
-    unsafe fn dac() -> &'static mut stm32f103::dac::RegisterBlock {
-        &mut *(0x40007400 as *mut stm32f103::dac::RegisterBlock)
+    unsafe fn dac() -> &'static mut library::dac::RegisterBlock {
+        &mut *(0x40007400 as *mut library::dac::RegisterBlock)
     }
     
     /// 获取RCC寄存器块
-    unsafe fn rcc() -> &'static mut stm32f103::rcc::RegisterBlock {
-        &mut *(0x40021000 as *mut stm32f103::rcc::RegisterBlock)
+    unsafe fn rcc() -> &'static mut library::rcc::RegisterBlock {
+        &mut *(0x40021000 as *mut library::rcc::RegisterBlock)
     }
     
     /// 初始化DAC
@@ -49,7 +49,7 @@ impl Dac {
         let rcc = Dac::rcc();
         
         // 启用DAC时钟
-        rcc.apb1enr().modify(|_, w: &mut stm32f103::rcc::apb1enr::W| w
+        rcc.apb1enr().modify(|_, w: &mut library::rcc::apb1enr::W| w
             .dacen().set_bit()
         );
     }
@@ -60,12 +60,12 @@ impl Dac {
         
         match channel {
             DacChannel::Channel1 => {
-                dac.cr().modify(|_, w: &mut stm32f103::dac::cr::W| w
+                dac.cr().modify(|_, w: &mut library::dac::cr::W| w
                     .en1().set_bit()
                 );
             }
             DacChannel::Channel2 => {
-                dac.cr().modify(|_, w: &mut stm32f103::dac::cr::W| w
+                dac.cr().modify(|_, w: &mut library::dac::cr::W| w
                     .en2().set_bit()
                 );
             }
@@ -78,12 +78,12 @@ impl Dac {
         
         match channel {
             DacChannel::Channel1 => {
-                dac.cr().modify(|_, w: &mut stm32f103::dac::cr::W| w
+                dac.cr().modify(|_, w: &mut library::dac::cr::W| w
                     .en1().clear_bit()
                 );
             }
             DacChannel::Channel2 => {
-                dac.cr().modify(|_, w: &mut stm32f103::dac::cr::W| w
+                dac.cr().modify(|_, w: &mut library::dac::cr::W| w
                     .en2().clear_bit()
                 );
             }
@@ -96,12 +96,12 @@ impl Dac {
         
         match channel {
             DacChannel::Channel1 => {
-                dac.cr().modify(|_, w: &mut stm32f103::dac::cr::W| w
+                dac.cr().modify(|_, w: &mut library::dac::cr::W| w
                     .ten1().set_bit()
                 );
             }
             DacChannel::Channel2 => {
-                dac.cr().modify(|_, w: &mut stm32f103::dac::cr::W| w
+                dac.cr().modify(|_, w: &mut library::dac::cr::W| w
                     .ten2().set_bit()
                 );
             }
@@ -114,12 +114,12 @@ impl Dac {
         
         match channel {
             DacChannel::Channel1 => {
-                dac.cr().modify(|_, w: &mut stm32f103::dac::cr::W| w
+                dac.cr().modify(|_, w: &mut library::dac::cr::W| w
                     .ten1().clear_bit()
                 );
             }
             DacChannel::Channel2 => {
-                dac.cr().modify(|_, w: &mut stm32f103::dac::cr::W| w
+                dac.cr().modify(|_, w: &mut library::dac::cr::W| w
                     .ten2().clear_bit()
                 );
             }
@@ -132,12 +132,12 @@ impl Dac {
         
         match channel {
             DacChannel::Channel1 => {
-                dac.cr().modify(|_, w: &mut stm32f103::dac::cr::W| w
+                dac.cr().modify(|_, w: &mut library::dac::cr::W| w
                     .tsel1().bits(source as u8)
                 );
             }
             DacChannel::Channel2 => {
-                dac.cr().modify(|_, w: &mut stm32f103::dac::cr::W| w
+                dac.cr().modify(|_, w: &mut library::dac::cr::W| w
                     .tsel2().bits(source as u8)
                 );
             }
@@ -150,12 +150,12 @@ impl Dac {
         
         match channel {
             DacChannel::Channel1 => {
-                dac.cr().modify(|_, w: &mut stm32f103::dac::cr::W| w
+                dac.cr().modify(|_, w: &mut library::dac::cr::W| w
                     .boff1().clear_bit()
                 );
             }
             DacChannel::Channel2 => {
-                dac.cr().modify(|_, w: &mut stm32f103::dac::cr::W| w
+                dac.cr().modify(|_, w: &mut library::dac::cr::W| w
                     .boff2().clear_bit()
                 );
             }
@@ -168,12 +168,12 @@ impl Dac {
         
         match channel {
             DacChannel::Channel1 => {
-                dac.cr().modify(|_, w: &mut stm32f103::dac::cr::W| w
+                dac.cr().modify(|_, w: &mut library::dac::cr::W| w
                     .boff1().set_bit()
                 );
             }
             DacChannel::Channel2 => {
-                dac.cr().modify(|_, w: &mut stm32f103::dac::cr::W| w
+                dac.cr().modify(|_, w: &mut library::dac::cr::W| w
                     .boff2().set_bit()
                 );
             }
@@ -186,12 +186,12 @@ impl Dac {
         
         match channel {
             DacChannel::Channel1 => {
-                dac.swtrigr().write(|w: &mut stm32f103::dac::swtrigr::W| w
+                dac.swtrigr().write(|w: &mut library::dac::swtrigr::W| w
                     .swtrig1().set_bit()
                 );
             }
             DacChannel::Channel2 => {
-                dac.swtrigr().write(|w: &mut stm32f103::dac::swtrigr::W| w
+                dac.swtrigr().write(|w: &mut library::dac::swtrigr::W| w
                     .swtrig2().set_bit()
                 );
             }
@@ -205,12 +205,12 @@ impl Dac {
         
         match channel {
             DacChannel::Channel1 => {
-                dac.dhr12r1().write(|w: &mut stm32f103::dac::dhr12r1::W| w
+                dac.dhr12r1().write(|w: &mut library::dac::dhr12r1::W| w
                     .dacc1dhr().bits(value_clamped)
                 );
             }
             DacChannel::Channel2 => {
-                dac.dhr12r2().write(|w: &mut stm32f103::dac::dhr12r2::W| w
+                dac.dhr12r2().write(|w: &mut library::dac::dhr12r2::W| w
                     .dacc2dhr().bits(value_clamped)
                 );
             }
@@ -224,12 +224,12 @@ impl Dac {
         
         match channel {
             DacChannel::Channel1 => {
-                dac.dhr12l1().write(|w: &mut stm32f103::dac::dhr12l1::W| w
+                dac.dhr12l1().write(|w: &mut library::dac::dhr12l1::W| w
                     .dacc1dhr().bits(value_clamped << 4)
                 );
             }
             DacChannel::Channel2 => {
-                dac.dhr12l2().write(|w: &mut stm32f103::dac::dhr12l2::W| w
+                dac.dhr12l2().write(|w: &mut library::dac::dhr12l2::W| w
                     .dacc2dhr().bits(value_clamped << 4)
                 );
             }
@@ -242,12 +242,12 @@ impl Dac {
         
         match channel {
             DacChannel::Channel1 => {
-                dac.dhr8r1().write(|w: &mut stm32f103::dac::dhr8r1::W| w
+                dac.dhr8r1().write(|w: &mut library::dac::dhr8r1::W| w
                     .dacc1dhr().bits(value as u8)
                 );
             }
             DacChannel::Channel2 => {
-                dac.dhr8r2().write(|w: &mut stm32f103::dac::dhr8r2::W| w
+                dac.dhr8r2().write(|w: &mut library::dac::dhr8r2::W| w
                     .dacc2dhr().bits(value as u8)
                 );
             }
@@ -260,7 +260,7 @@ impl Dac {
         let value1_clamped = if value1 > 4095 { 4095 } else { value1 };
         let value2_clamped = if value2 > 4095 { 4095 } else { value2 };
         
-        dac.dhr12rd().write(|w: &mut stm32f103::dac::dhr12rd::W| w
+        dac.dhr12rd().write(|w: &mut library::dac::dhr12rd::W| w
             .dacc1dhr().bits(value1_clamped)
             .dacc2dhr().bits(value2_clamped)
         );

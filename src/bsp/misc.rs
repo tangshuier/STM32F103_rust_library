@@ -1,4 +1,4 @@
-#![allow(unused)]
+﻿#![allow(unused)]
 
 const SCB_BASE: u32 = 0xE000ED00;
 const NVIC_BASE: u32 = 0xE000E100;

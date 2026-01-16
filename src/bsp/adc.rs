@@ -1,11 +1,11 @@
-//! ADC模块
+﻿//! ADC模块
 //! 提供ADC转换功能封装
 
 // 屏蔽未使用代码警告
 #![allow(unused)]
 
 // 导入内部生成的设备驱动库
-use stm32f103::*;
+use library::*;
 
 /// ADC模式枚举
 #[derive(Debug, Clone, Copy)]
@@ -134,18 +134,18 @@ pub struct Adc {
 
 impl AdcNumber {
     /// 获取ADC1寄存器
-    fn get_adc1(&self) -> Option<&'static mut stm32f103::adc1::RegisterBlock> {
+    fn get_adc1(&self) -> Option<&'static mut library::adc1::RegisterBlock> {
         match self {
-            AdcNumber::ADC1 => unsafe { Some(&mut *(0x40012400 as *mut stm32f103::adc1::RegisterBlock)) },
+            AdcNumber::ADC1 => unsafe { Some(&mut *(0x40012400 as *mut library::adc1::RegisterBlock)) },
             AdcNumber::ADC2 => None,
         }
     }
     
     /// 获取ADC2寄存器
-    fn get_adc2(&self) -> Option<&'static mut stm32f103::adc2::RegisterBlock> {
+    fn get_adc2(&self) -> Option<&'static mut library::adc2::RegisterBlock> {
         match self {
             AdcNumber::ADC1 => None,
-            AdcNumber::ADC2 => unsafe { Some(&mut *(0x40012800 as *mut stm32f103::adc2::RegisterBlock)) },
+            AdcNumber::ADC2 => unsafe { Some(&mut *(0x40012800 as *mut library::adc2::RegisterBlock)) },
         }
     }
     
@@ -167,35 +167,35 @@ impl Adc {
     }
     
     /// 获取ADC1寄存器
-    fn get_adc1(&self) -> Option<&'static mut stm32f103::adc1::RegisterBlock> {
+    fn get_adc1(&self) -> Option<&'static mut library::adc1::RegisterBlock> {
         match self.number {
-            AdcNumber::ADC1 => unsafe { Some(&mut *(0x40012400 as *mut stm32f103::adc1::RegisterBlock)) },
+            AdcNumber::ADC1 => unsafe { Some(&mut *(0x40012400 as *mut library::adc1::RegisterBlock)) },
             AdcNumber::ADC2 => None,
         }
     }
     
     /// 获取ADC2寄存器
-    fn get_adc2(&self) -> Option<&'static mut stm32f103::adc2::RegisterBlock> {
+    fn get_adc2(&self) -> Option<&'static mut library::adc2::RegisterBlock> {
         match self.number {
             AdcNumber::ADC1 => None,
-            AdcNumber::ADC2 => unsafe { Some(&mut *(0x40012800 as *mut stm32f103::adc2::RegisterBlock)) },
+            AdcNumber::ADC2 => unsafe { Some(&mut *(0x40012800 as *mut library::adc2::RegisterBlock)) },
         }
     }
     
     /// 初始化ADC
     pub fn init(&self, config: &AdcConfig) {
-        let rcc = unsafe { &mut *(0x40021000 as *mut stm32f103::rcc::RegisterBlock) };
+        let rcc = unsafe { &mut *(0x40021000 as *mut library::rcc::RegisterBlock) };
         
         // 1. 启用ADC时钟
         unsafe {
             match self.number {
                 AdcNumber::ADC1 => {
-                    rcc.apb2enr().modify(|_, w: &mut stm32f103::rcc::apb2enr::W| {
+                    rcc.apb2enr().modify(|_, w: &mut library::rcc::apb2enr::W| {
                         w.adc1en().set_bit()
                     });
                     
                     // 3. 配置ADC1控制寄存器
-                    let adc = unsafe { &mut *(0x40012400 as *mut stm32f103::adc1::RegisterBlock) };
+                    let adc = unsafe { &mut *(0x40012400 as *mut library::adc1::RegisterBlock) };
                     
                     // CR1: 配置ADC模式和扫描模式
                     let mut cr1_bits = config.mode as u32;
@@ -219,12 +219,12 @@ impl Adc {
                     self.calibrate();
                 },
                 AdcNumber::ADC2 => {
-                    rcc.apb2enr().modify(|_, w: &mut stm32f103::rcc::apb2enr::W| {
+                    rcc.apb2enr().modify(|_, w: &mut library::rcc::apb2enr::W| {
                         w.adc2en().set_bit()
                     });
                     
                     // 3. 配置ADC2控制寄存器
-                    let adc = unsafe { &mut *(0x40012800 as *mut stm32f103::adc2::RegisterBlock) };
+                    let adc = unsafe { &mut *(0x40012800 as *mut library::adc2::RegisterBlock) };
                     
                     // CR1: 配置ADC模式和扫描模式
                     let mut cr1_bits = config.mode as u32;
@@ -256,11 +256,11 @@ impl Adc {
         unsafe {
             match self.number {
                 AdcNumber::ADC1 => {
-                    let adc = &mut *(0x40012400 as *mut stm32f103::adc1::RegisterBlock);
+                    let adc = &mut *(0x40012400 as *mut library::adc1::RegisterBlock);
                     adc.cr2().modify(|_, w| w.rstcal().set_bit());
                 },
                 AdcNumber::ADC2 => {
-                    let adc = &mut *(0x40012800 as *mut stm32f103::adc2::RegisterBlock);
+                    let adc = &mut *(0x40012800 as *mut library::adc2::RegisterBlock);
                     adc.cr2().modify(|_, w| w.rstcal().set_bit());
                 },
             }
@@ -272,11 +272,11 @@ impl Adc {
         unsafe {
             match self.number {
                 AdcNumber::ADC1 => {
-                    let adc = &mut *(0x40012400 as *mut stm32f103::adc1::RegisterBlock);
+                    let adc = &mut *(0x40012400 as *mut library::adc1::RegisterBlock);
                     adc.cr2().read().rstcal().bit()
                 },
                 AdcNumber::ADC2 => {
-                    let adc = &mut *(0x40012800 as *mut stm32f103::adc2::RegisterBlock);
+                    let adc = &mut *(0x40012800 as *mut library::adc2::RegisterBlock);
                     adc.cr2().read().rstcal().bit()
                 },
             }
@@ -288,11 +288,11 @@ impl Adc {
         unsafe {
             match self.number {
                 AdcNumber::ADC1 => {
-                    let adc = &mut *(0x40012400 as *mut stm32f103::adc1::RegisterBlock);
+                    let adc = &mut *(0x40012400 as *mut library::adc1::RegisterBlock);
                     adc.cr2().modify(|_, w| w.cal().set_bit());
                 },
                 AdcNumber::ADC2 => {
-                    let adc = &mut *(0x40012800 as *mut stm32f103::adc2::RegisterBlock);
+                    let adc = &mut *(0x40012800 as *mut library::adc2::RegisterBlock);
                     adc.cr2().modify(|_, w| w.cal().set_bit());
                 },
             }
@@ -304,11 +304,11 @@ impl Adc {
         unsafe {
             match self.number {
                 AdcNumber::ADC1 => {
-                    let adc = &mut *(0x40012400 as *mut stm32f103::adc1::RegisterBlock);
+                    let adc = &mut *(0x40012400 as *mut library::adc1::RegisterBlock);
                     adc.cr2().read().cal().bit()
                 },
                 AdcNumber::ADC2 => {
-                    let adc = &mut *(0x40012800 as *mut stm32f103::adc2::RegisterBlock);
+                    let adc = &mut *(0x40012800 as *mut library::adc2::RegisterBlock);
                     adc.cr2().read().cal().bit()
                 },
             }
@@ -340,7 +340,7 @@ impl Adc {
         unsafe {
             match self.number {
                 AdcNumber::ADC1 => {
-                    let adc = &mut *(0x40012400 as *mut stm32f103::adc1::RegisterBlock);
+                    let adc = &mut *(0x40012400 as *mut library::adc1::RegisterBlock);
                     if channel < 10 {
                         // 使用SMPR2寄存器（通道0-9）
                         let shift = channel * 3;
@@ -362,7 +362,7 @@ impl Adc {
                     }
                 },
                 AdcNumber::ADC2 => {
-                    let adc = &mut *(0x40012800 as *mut stm32f103::adc2::RegisterBlock);
+                    let adc = &mut *(0x40012800 as *mut library::adc2::RegisterBlock);
                     if channel < 10 {
                         // 使用SMPR2寄存器（通道0-9）
                         let shift = channel * 3;
@@ -394,7 +394,7 @@ impl Adc {
         unsafe {
             match self.number {
                 AdcNumber::ADC1 => {
-                    let adc = &mut *(0x40012400 as *mut stm32f103::adc1::RegisterBlock);
+                    let adc = &mut *(0x40012400 as *mut library::adc1::RegisterBlock);
                     
                     // 设置采样时间
                     self.set_sample_time(channel, sample_time);
@@ -430,7 +430,7 @@ impl Adc {
                     }
                 },
                 AdcNumber::ADC2 => {
-                    let adc = &mut *(0x40012800 as *mut stm32f103::adc2::RegisterBlock);
+                    let adc = &mut *(0x40012800 as *mut library::adc2::RegisterBlock);
                     
                     // 设置采样时间
                     self.set_sample_time(channel, sample_time);
@@ -474,13 +474,13 @@ impl Adc {
         unsafe {
             match self.number {
                 AdcNumber::ADC1 => {
-                    let adc = &mut *(0x40012400 as *mut stm32f103::adc1::RegisterBlock);
+                    let adc = &mut *(0x40012400 as *mut library::adc1::RegisterBlock);
                     if enable {
                         adc.cr2().modify(|_, w| w.swstart().set_bit());
                     }
                 },
                 AdcNumber::ADC2 => {
-                    let adc = &mut *(0x40012800 as *mut stm32f103::adc2::RegisterBlock);
+                    let adc = &mut *(0x40012800 as *mut library::adc2::RegisterBlock);
                     if enable {
                         adc.cr2().modify(|_, w| w.swstart().set_bit());
                     }
@@ -494,11 +494,11 @@ impl Adc {
         unsafe {
             match self.number {
                 AdcNumber::ADC1 => {
-                    let adc = &mut *(0x40012400 as *mut stm32f103::adc1::RegisterBlock);
+                    let adc = &mut *(0x40012400 as *mut library::adc1::RegisterBlock);
                     adc.cr2().read().swstart().bit()
                 },
                 AdcNumber::ADC2 => {
-                    let adc = &mut *(0x40012800 as *mut stm32f103::adc2::RegisterBlock);
+                    let adc = &mut *(0x40012800 as *mut library::adc2::RegisterBlock);
                     adc.cr2().read().swstart().bit()
                 },
             }
@@ -527,7 +527,7 @@ impl Adc {
         unsafe {
             match self.number {
                 AdcNumber::ADC1 => {
-                    let adc = &mut *(0x40012400 as *mut stm32f103::adc1::RegisterBlock);
+                    let adc = &mut *(0x40012400 as *mut library::adc1::RegisterBlock);
                     // 配置规则序列
                     self.regular_channel_config(channel, 1, AdcSampleTime::Cycles13_5);
                     
@@ -538,7 +538,7 @@ impl Adc {
                     self.software_start_conv_cmd(true);
                 },
                 AdcNumber::ADC2 => {
-                    let adc = &mut *(0x40012800 as *mut stm32f103::adc2::RegisterBlock);
+                    let adc = &mut *(0x40012800 as *mut library::adc2::RegisterBlock);
                     // 配置规则序列
                     self.regular_channel_config(channel, 1, AdcSampleTime::Cycles13_5);
                     
@@ -557,12 +557,12 @@ impl Adc {
         unsafe {
             match self.number {
                 AdcNumber::ADC1 => {
-                    let adc = &mut *(0x40012400 as *mut stm32f103::adc1::RegisterBlock);
+                    let adc = &mut *(0x40012400 as *mut library::adc1::RegisterBlock);
                     // 禁用连续转换
                     adc.cr2().modify(|_, w| w.cont().clear_bit());
                 },
                 AdcNumber::ADC2 => {
-                    let adc = &mut *(0x40012800 as *mut stm32f103::adc2::RegisterBlock);
+                    let adc = &mut *(0x40012800 as *mut library::adc2::RegisterBlock);
                     // 禁用连续转换
                     adc.cr2().modify(|_, w| w.cont().clear_bit());
                 },
@@ -575,7 +575,7 @@ impl Adc {
         unsafe {
             match self.number {
                 AdcNumber::ADC1 => {
-                    let adc = &mut *(0x40012400 as *mut stm32f103::adc1::RegisterBlock);
+                    let adc = &mut *(0x40012400 as *mut library::adc1::RegisterBlock);
                     if enable {
                         adc.cr2().modify(|_, w| w.exttrig().set_bit());
                     } else {
@@ -583,7 +583,7 @@ impl Adc {
                     }
                 },
                 AdcNumber::ADC2 => {
-                    let adc = &mut *(0x40012800 as *mut stm32f103::adc2::RegisterBlock);
+                    let adc = &mut *(0x40012800 as *mut library::adc2::RegisterBlock);
                     if enable {
                         adc.cr2().modify(|_, w| w.exttrig().set_bit());
                     } else {
@@ -599,7 +599,7 @@ impl Adc {
         unsafe {
             match self.number {
                 AdcNumber::ADC1 => {
-                    let adc = &mut *(0x40012400 as *mut stm32f103::adc1::RegisterBlock);
+                    let adc = &mut *(0x40012400 as *mut library::adc1::RegisterBlock);
                     if enable {
                         adc.cr2().modify(|_, w| w.dma().set_bit());
                     } else {
@@ -607,7 +607,7 @@ impl Adc {
                     }
                 },
                 AdcNumber::ADC2 => {
-                    let adc = &mut *(0x40012800 as *mut stm32f103::adc2::RegisterBlock);
+                    let adc = &mut *(0x40012800 as *mut library::adc2::RegisterBlock);
                     if enable {
                         adc.cr2().modify(|_, w| w.dma().set_bit());
                     } else {
@@ -623,7 +623,7 @@ impl Adc {
         unsafe {
             match self.number {
                 AdcNumber::ADC1 => {
-                    let adc = &mut *(0x40012400 as *mut stm32f103::adc1::RegisterBlock);
+                    let adc = &mut *(0x40012400 as *mut library::adc1::RegisterBlock);
                     match it {
                         AdcInterrupt::EOC => {
                             if enable {
@@ -649,7 +649,7 @@ impl Adc {
                     }
                 },
                 AdcNumber::ADC2 => {
-                    let adc = &mut *(0x40012800 as *mut stm32f103::adc2::RegisterBlock);
+                    let adc = &mut *(0x40012800 as *mut library::adc2::RegisterBlock);
                     match it {
                         AdcInterrupt::EOC => {
                             if enable {
@@ -683,11 +683,11 @@ impl Adc {
         unsafe {
             match self.number {
                 AdcNumber::ADC1 => {
-                    let adc = &mut *(0x40012400 as *mut stm32f103::adc1::RegisterBlock);
+                    let adc = &mut *(0x40012400 as *mut library::adc1::RegisterBlock);
                     adc.sr().read().eoc().bit()
                 },
                 AdcNumber::ADC2 => {
-                    let adc = &mut *(0x40012800 as *mut stm32f103::adc2::RegisterBlock);
+                    let adc = &mut *(0x40012800 as *mut library::adc2::RegisterBlock);
                     adc.sr().read().eoc().bit()
                 },
             }
@@ -699,11 +699,11 @@ impl Adc {
         unsafe {
             match self.number {
                 AdcNumber::ADC1 => {
-                    let adc = &mut *(0x40012400 as *mut stm32f103::adc1::RegisterBlock);
+                    let adc = &mut *(0x40012400 as *mut library::adc1::RegisterBlock);
                     (adc.dr().read().bits() & 0x0000FFFF) as u16
                 },
                 AdcNumber::ADC2 => {
-                    let adc = &mut *(0x40012800 as *mut stm32f103::adc2::RegisterBlock);
+                    let adc = &mut *(0x40012800 as *mut library::adc2::RegisterBlock);
                     (adc.dr().read().bits() & 0x0000FFFF) as u16
                 },
             }
@@ -715,7 +715,7 @@ impl Adc {
         unsafe {
             match self.number {
                 AdcNumber::ADC1 => {
-                    let adc = &mut *(0x40012400 as *mut stm32f103::adc1::RegisterBlock);
+                    let adc = &mut *(0x40012400 as *mut library::adc1::RegisterBlock);
                     match flag {
                         AdcFlag::AWD => adc.sr().read().awd().bit(),
                         AdcFlag::EOC => adc.sr().read().eoc().bit(),
@@ -725,7 +725,7 @@ impl Adc {
                     }
                 },
                 AdcNumber::ADC2 => {
-                    let adc = &mut *(0x40012800 as *mut stm32f103::adc2::RegisterBlock);
+                    let adc = &mut *(0x40012800 as *mut library::adc2::RegisterBlock);
                     match flag {
                         AdcFlag::AWD => adc.sr().read().awd().bit(),
                         AdcFlag::EOC => adc.sr().read().eoc().bit(),
@@ -743,7 +743,7 @@ impl Adc {
         unsafe {
             match self.number {
                 AdcNumber::ADC1 => {
-                    let adc = &mut *(0x40012400 as *mut stm32f103::adc1::RegisterBlock);
+                    let adc = &mut *(0x40012400 as *mut library::adc1::RegisterBlock);
                     match flag {
                         AdcFlag::AWD => { adc.sr().write(|w| w.awd().clear_bit()); },
                         AdcFlag::EOC => { adc.sr().write(|w| w.eoc().clear_bit()); },
@@ -753,7 +753,7 @@ impl Adc {
                     }
                 },
                 AdcNumber::ADC2 => {
-                    let adc = &mut *(0x40012800 as *mut stm32f103::adc2::RegisterBlock);
+                    let adc = &mut *(0x40012800 as *mut library::adc2::RegisterBlock);
                     match flag {
                         AdcFlag::AWD => { adc.sr().write(|w| w.awd().clear_bit()); },
                         AdcFlag::EOC => { adc.sr().write(|w| w.eoc().clear_bit()); },
@@ -771,7 +771,7 @@ impl Adc {
         unsafe {
             match self.number {
                 AdcNumber::ADC1 => {
-                    let adc = &mut *(0x40012400 as *mut stm32f103::adc1::RegisterBlock);
+                    let adc = &mut *(0x40012400 as *mut library::adc1::RegisterBlock);
                     match it {
                         AdcInterrupt::EOC => adc.sr().read().eoc().bit() && adc.cr1().read().eocie().bit(),
                         AdcInterrupt::AWD => adc.sr().read().awd().bit() && adc.cr1().read().awdie().bit(),
@@ -779,7 +779,7 @@ impl Adc {
                     }
                 },
                 AdcNumber::ADC2 => {
-                    let adc = &mut *(0x40012800 as *mut stm32f103::adc2::RegisterBlock);
+                    let adc = &mut *(0x40012800 as *mut library::adc2::RegisterBlock);
                     match it {
                         AdcInterrupt::EOC => adc.sr().read().eoc().bit() && adc.cr1().read().eocie().bit(),
                         AdcInterrupt::AWD => adc.sr().read().awd().bit() && adc.cr1().read().awdie().bit(),
@@ -802,7 +802,7 @@ impl Adc {
     
     /// 重置ADC到默认值
     pub fn deinit(&self) {
-        let rcc = unsafe { &mut *(0x40021000 as *mut stm32f103::rcc::RegisterBlock) };
+        let rcc = unsafe { &mut *(0x40021000 as *mut library::rcc::RegisterBlock) };
         
         // 通过RCC重置ADC
         unsafe {
@@ -828,7 +828,7 @@ impl Adc {
         unsafe {
             match self.number {
                 AdcNumber::ADC1 => {
-                    let adc = &mut *(0x40012400 as *mut stm32f103::adc1::RegisterBlock);
+                    let adc = &mut *(0x40012400 as *mut library::adc1::RegisterBlock);
                     if enable {
                         adc.cr2().modify(|_, w| w.adon().set_bit());
                     } else {
@@ -836,7 +836,7 @@ impl Adc {
                     }
                 },
                 AdcNumber::ADC2 => {
-                    let adc = &mut *(0x40012800 as *mut stm32f103::adc2::RegisterBlock);
+                    let adc = &mut *(0x40012800 as *mut library::adc2::RegisterBlock);
                     if enable {
                         adc.cr2().modify(|_, w| w.adon().set_bit());
                     } else {
@@ -852,7 +852,7 @@ impl Adc {
         unsafe {
             match self.number {
                 AdcNumber::ADC1 => {
-                    let adc = &mut *(0x40012400 as *mut stm32f103::adc1::RegisterBlock);
+                    let adc = &mut *(0x40012400 as *mut library::adc1::RegisterBlock);
                     if enable {
                         adc.cr2().modify(|_, w| w.tsvrefe().set_bit());
                     } else {
@@ -860,7 +860,7 @@ impl Adc {
                     }
                 },
                 AdcNumber::ADC2 => {
-                    let adc = &mut *(0x40012800 as *mut stm32f103::adc2::RegisterBlock);
+                    let adc = &mut *(0x40012800 as *mut library::adc2::RegisterBlock);
                     if enable {
                         adc.cr2().modify(|_, w| w.tsvrefe().set_bit());
                     } else {
@@ -879,7 +879,7 @@ impl Adc {
         unsafe {
             match self.number {
                 AdcNumber::ADC1 => {
-                    let adc = &mut *(0x40012400 as *mut stm32f103::adc1::RegisterBlock);
+                    let adc = &mut *(0x40012400 as *mut library::adc1::RegisterBlock);
                     
                     // 设置采样时间
                     self.set_sample_time(channel, sample_time);
@@ -922,7 +922,7 @@ impl Adc {
                     }
                 },
                 AdcNumber::ADC2 => {
-                    let adc = &mut *(0x40012800 as *mut stm32f103::adc2::RegisterBlock);
+                    let adc = &mut *(0x40012800 as *mut library::adc2::RegisterBlock);
                     
                     // 设置采样时间
                     self.set_sample_time(channel, sample_time);
@@ -975,7 +975,7 @@ impl Adc {
         unsafe {
             match self.number {
                 AdcNumber::ADC1 => {
-                    let adc = &mut *(0x40012400 as *mut stm32f103::adc1::RegisterBlock);
+                    let adc = &mut *(0x40012400 as *mut library::adc1::RegisterBlock);
                     adc.jsqr().modify(|r, w| {
                         let mut value = r.bits();
                         value &= !(0x03 << 20);
@@ -984,7 +984,7 @@ impl Adc {
                     });
                 },
                 AdcNumber::ADC2 => {
-                    let adc = &mut *(0x40012800 as *mut stm32f103::adc2::RegisterBlock);
+                    let adc = &mut *(0x40012800 as *mut library::adc2::RegisterBlock);
                     adc.jsqr().modify(|r, w| {
                         let mut value = r.bits();
                         value &= !(0x03 << 20);
@@ -1001,7 +1001,7 @@ impl Adc {
         unsafe {
             match self.number {
                 AdcNumber::ADC1 => {
-                    let adc = &mut *(0x40012400 as *mut stm32f103::adc1::RegisterBlock);
+                    let adc = &mut *(0x40012400 as *mut library::adc1::RegisterBlock);
                     match injected_channel {
                         1 => {
                             adc.jofr1().write(|w| w.joffset1().bits(offset));
@@ -1019,7 +1019,7 @@ impl Adc {
                     }
                 },
                 AdcNumber::ADC2 => {
-                    let adc = &mut *(0x40012800 as *mut stm32f103::adc2::RegisterBlock);
+                    let adc = &mut *(0x40012800 as *mut library::adc2::RegisterBlock);
                     match injected_channel {
                         1 => {
                             adc.jofr1().write(|w| w.joffset1().bits(offset));
@@ -1045,7 +1045,7 @@ impl Adc {
         unsafe {
             match self.number {
                 AdcNumber::ADC1 => {
-                    let adc = &mut *(0x40012400 as *mut stm32f103::adc1::RegisterBlock);
+                    let adc = &mut *(0x40012400 as *mut library::adc1::RegisterBlock);
                     adc.cr2().modify(|r, w| {
                         let mut value = r.bits();
                         value &= !(0x00007000); // 清除JEXTSEL位
@@ -1054,7 +1054,7 @@ impl Adc {
                     });
                 },
                 AdcNumber::ADC2 => {
-                    let adc = &mut *(0x40012800 as *mut stm32f103::adc2::RegisterBlock);
+                    let adc = &mut *(0x40012800 as *mut library::adc2::RegisterBlock);
                     adc.cr2().modify(|r, w| {
                         let mut value = r.bits();
                         value &= !(0x00007000); // 清除JEXTSEL位
@@ -1071,7 +1071,7 @@ impl Adc {
         unsafe {
             match self.number {
                 AdcNumber::ADC1 => {
-                    let adc = &mut *(0x40012400 as *mut stm32f103::adc1::RegisterBlock);
+                    let adc = &mut *(0x40012400 as *mut library::adc1::RegisterBlock);
                     if enable {
                         adc.cr2().modify(|_, w| w.jexttrig().set_bit());
                     } else {
@@ -1079,7 +1079,7 @@ impl Adc {
                     }
                 },
                 AdcNumber::ADC2 => {
-                    let adc = &mut *(0x40012800 as *mut stm32f103::adc2::RegisterBlock);
+                    let adc = &mut *(0x40012800 as *mut library::adc2::RegisterBlock);
                     if enable {
                         adc.cr2().modify(|_, w| w.jexttrig().set_bit());
                     } else {
@@ -1095,13 +1095,13 @@ impl Adc {
         unsafe {
             match self.number {
                 AdcNumber::ADC1 => {
-                    let adc = &mut *(0x40012400 as *mut stm32f103::adc1::RegisterBlock);
+                    let adc = &mut *(0x40012400 as *mut library::adc1::RegisterBlock);
                     if enable {
                         adc.cr2().modify(|_, w| w.jswstart().set_bit());
                     }
                 },
                 AdcNumber::ADC2 => {
-                    let adc = &mut *(0x40012800 as *mut stm32f103::adc2::RegisterBlock);
+                    let adc = &mut *(0x40012800 as *mut library::adc2::RegisterBlock);
                     if enable {
                         adc.cr2().modify(|_, w| w.jswstart().set_bit());
                     }
@@ -1115,7 +1115,7 @@ impl Adc {
         unsafe {
             match self.number {
                 AdcNumber::ADC1 => {
-                    let adc = &mut *(0x40012400 as *mut stm32f103::adc1::RegisterBlock);
+                    let adc = &mut *(0x40012400 as *mut library::adc1::RegisterBlock);
                     match injected_channel {
                         1 => adc.jdr1().read().bits() as u16,
                         2 => adc.jdr2().read().bits() as u16,
@@ -1125,7 +1125,7 @@ impl Adc {
                     }
                 },
                 AdcNumber::ADC2 => {
-                    let adc = &mut *(0x40012800 as *mut stm32f103::adc2::RegisterBlock);
+                    let adc = &mut *(0x40012800 as *mut library::adc2::RegisterBlock);
                     match injected_channel {
                         1 => adc.jdr1().read().bits() as u16,
                         2 => adc.jdr2().read().bits() as u16,
@@ -1143,7 +1143,7 @@ impl Adc {
         unsafe {
             match self.number {
                 AdcNumber::ADC1 => {
-                    let adc = &mut *(0x40012400 as *mut stm32f103::adc1::RegisterBlock);
+                    let adc = &mut *(0x40012400 as *mut library::adc1::RegisterBlock);
                     if enable {
                         adc.cr1().modify(|_, w| w.jauto().set_bit());
                     } else {
@@ -1151,7 +1151,7 @@ impl Adc {
                     }
                 },
                 AdcNumber::ADC2 => {
-                    let adc = &mut *(0x40012800 as *mut stm32f103::adc2::RegisterBlock);
+                    let adc = &mut *(0x40012800 as *mut library::adc2::RegisterBlock);
                     if enable {
                         adc.cr1().modify(|_, w| w.jauto().set_bit());
                     } else {
@@ -1167,7 +1167,7 @@ impl Adc {
         unsafe {
             match self.number {
                 AdcNumber::ADC1 => {
-                    let adc = &mut *(0x40012400 as *mut stm32f103::adc1::RegisterBlock);
+                    let adc = &mut *(0x40012400 as *mut library::adc1::RegisterBlock);
                     if enable {
                         adc.cr1().modify(|_, w| w.jdiscen().set_bit());
                     } else {
@@ -1175,7 +1175,7 @@ impl Adc {
                     }
                 },
                 AdcNumber::ADC2 => {
-                    let adc = &mut *(0x40012800 as *mut stm32f103::adc2::RegisterBlock);
+                    let adc = &mut *(0x40012800 as *mut library::adc2::RegisterBlock);
                     if enable {
                         adc.cr1().modify(|_, w| w.jdiscen().set_bit());
                     } else {
@@ -1191,7 +1191,7 @@ impl Adc {
         unsafe {
             match self.number {
                 AdcNumber::ADC1 => {
-                    let adc = &mut *(0x40012400 as *mut stm32f103::adc1::RegisterBlock);
+                    let adc = &mut *(0x40012400 as *mut library::adc1::RegisterBlock);
                     adc.cr1().modify(|r, w| {
                         let mut value = r.bits();
                         value &= !(0x00001F00); // 清除DISCNUM位
@@ -1200,7 +1200,7 @@ impl Adc {
                     });
                 },
                 AdcNumber::ADC2 => {
-                    let adc = &mut *(0x40012800 as *mut stm32f103::adc2::RegisterBlock);
+                    let adc = &mut *(0x40012800 as *mut library::adc2::RegisterBlock);
                     adc.cr1().modify(|r, w| {
                         let mut value = r.bits();
                         value &= !(0x00001F00); // 清除DISCNUM位
@@ -1217,7 +1217,7 @@ impl Adc {
         unsafe {
             match self.number {
                 AdcNumber::ADC1 => {
-                    let adc = &mut *(0x40012400 as *mut stm32f103::adc1::RegisterBlock);
+                    let adc = &mut *(0x40012400 as *mut library::adc1::RegisterBlock);
                     if enable {
                         adc.cr1().modify(|_, w| w.discen().set_bit());
                     } else {
@@ -1225,7 +1225,7 @@ impl Adc {
                     }
                 },
                 AdcNumber::ADC2 => {
-                    let adc = &mut *(0x40012800 as *mut stm32f103::adc2::RegisterBlock);
+                    let adc = &mut *(0x40012800 as *mut library::adc2::RegisterBlock);
                     if enable {
                         adc.cr1().modify(|_, w| w.discen().set_bit());
                     } else {
@@ -1241,7 +1241,7 @@ impl Adc {
         unsafe {
             match self.number {
                 AdcNumber::ADC1 => {
-                    let adc = &mut *(0x40012400 as *mut stm32f103::adc1::RegisterBlock);
+                    let adc = &mut *(0x40012400 as *mut library::adc1::RegisterBlock);
                     adc.cr1().modify(|r, w| {
                         let mut value = r.bits();
                         value &= !(0x00C00200); // 清除AWDEN和JAWDEN位
@@ -1250,7 +1250,7 @@ impl Adc {
                     });
                 },
                 AdcNumber::ADC2 => {
-                    let adc = &mut *(0x40012800 as *mut stm32f103::adc2::RegisterBlock);
+                    let adc = &mut *(0x40012800 as *mut library::adc2::RegisterBlock);
                     adc.cr1().modify(|r, w| {
                         let mut value = r.bits();
                         value &= !(0x00C00200); // 清除AWDEN和JAWDEN位
@@ -1267,12 +1267,12 @@ impl Adc {
         unsafe {
             match self.number {
                 AdcNumber::ADC1 => {
-                    let adc = &mut *(0x40012400 as *mut stm32f103::adc1::RegisterBlock);
+                    let adc = &mut *(0x40012400 as *mut library::adc1::RegisterBlock);
                     adc.htr().write(|w| w.bits(high_threshold as u32));
                     adc.ltr().write(|w| w.bits(low_threshold as u32));
                 },
                 AdcNumber::ADC2 => {
-                    let adc = &mut *(0x40012800 as *mut stm32f103::adc2::RegisterBlock);
+                    let adc = &mut *(0x40012800 as *mut library::adc2::RegisterBlock);
                     adc.htr().write(|w| w.bits(high_threshold as u32));
                     adc.ltr().write(|w| w.bits(low_threshold as u32));
                 },
@@ -1287,7 +1287,7 @@ impl Adc {
         unsafe {
             match self.number {
                 AdcNumber::ADC1 => {
-                    let adc = &mut *(0x40012400 as *mut stm32f103::adc1::RegisterBlock);
+                    let adc = &mut *(0x40012400 as *mut library::adc1::RegisterBlock);
                     adc.cr1().modify(|r, w| {
                         let mut value = r.bits();
                         value &= !(0x0000001F); // 清除AWDCH位
@@ -1296,7 +1296,7 @@ impl Adc {
                     });
                 },
                 AdcNumber::ADC2 => {
-                    let adc = &mut *(0x40012800 as *mut stm32f103::adc2::RegisterBlock);
+                    let adc = &mut *(0x40012800 as *mut library::adc2::RegisterBlock);
                     adc.cr1().modify(|r, w| {
                         let mut value = r.bits();
                         value &= !(0x0000001F); // 清除AWDCH位

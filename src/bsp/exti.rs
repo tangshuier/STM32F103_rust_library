@@ -1,10 +1,10 @@
-//! EXTI模块
+﻿//! EXTI模块
 //! 提供外部中断功能封装
 
 #![allow(unused)]
 
 // 导入内部生成的设备驱动库
-use stm32f103::*;
+use library::*;
 
 /// EXTI线枚举
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -50,8 +50,8 @@ impl Exti {
     }
     
     /// 获取EXTI寄存器块
-    unsafe fn exti(&self) -> &'static mut stm32f103::exti::RegisterBlock {
-        &mut *(0x40010400 as *mut stm32f103::exti::RegisterBlock)
+    unsafe fn exti(&self) -> &'static mut library::exti::RegisterBlock {
+        &mut *(0x40010400 as *mut library::exti::RegisterBlock)
     }
     
     /// 初始化EXTI线
@@ -92,9 +92,9 @@ impl Exti {
         }
         
         // 写入配置
-        exti.rtsr().write(|w: &mut stm32f103::exti::rtsr::W| unsafe { w.bits(current_rtsr) });
-        exti.ftsr().write(|w: &mut stm32f103::exti::ftsr::W| unsafe { w.bits(current_ftsr) });
-        exti.imr().write(|w: &mut stm32f103::exti::imr::W| unsafe { w.bits(current_imr) });
+        exti.rtsr().write(|w: &mut library::exti::rtsr::W| unsafe { w.bits(current_rtsr) });
+        exti.ftsr().write(|w: &mut library::exti::ftsr::W| unsafe { w.bits(current_ftsr) });
+        exti.imr().write(|w: &mut library::exti::imr::W| unsafe { w.bits(current_imr) });
     }
     
     /// 启用EXTI线中断
@@ -104,7 +104,7 @@ impl Exti {
         let line_mask = 1 << line;
         
         let current_imr = exti.imr().read().bits();
-        exti.imr().write(|w: &mut stm32f103::exti::imr::W| unsafe { w.bits(current_imr | line_mask) });
+        exti.imr().write(|w: &mut library::exti::imr::W| unsafe { w.bits(current_imr | line_mask) });
     }
     
     /// 禁用EXTI线中断
@@ -114,7 +114,7 @@ impl Exti {
         let line_mask = 1 << line;
         
         let current_imr = exti.imr().read().bits();
-        exti.imr().write(|w: &mut stm32f103::exti::imr::W| unsafe { w.bits(current_imr & !line_mask) });
+        exti.imr().write(|w: &mut library::exti::imr::W| unsafe { w.bits(current_imr & !line_mask) });
     }
     
     /// 启用EXTI线事件
@@ -124,7 +124,7 @@ impl Exti {
         let line_mask = 1 << line;
         
         let current_emr = exti.emr().read().bits();
-        exti.emr().write(|w: &mut stm32f103::exti::emr::W| unsafe { w.bits(current_emr | line_mask) });
+        exti.emr().write(|w: &mut library::exti::emr::W| unsafe { w.bits(current_emr | line_mask) });
     }
     
     /// 禁用EXTI线事件
@@ -134,7 +134,7 @@ impl Exti {
         let line_mask = 1 << line;
         
         let current_emr = exti.emr().read().bits();
-        exti.emr().write(|w: &mut stm32f103::exti::emr::W| unsafe { w.bits(current_emr & !line_mask) });
+        exti.emr().write(|w: &mut library::exti::emr::W| unsafe { w.bits(current_emr & !line_mask) });
     }
     
     /// 启用EXTI线上升沿触发
@@ -144,7 +144,7 @@ impl Exti {
         let line_mask = 1 << line;
         
         let current_rtsr = exti.rtsr().read().bits();
-        exti.rtsr().write(|w: &mut stm32f103::exti::rtsr::W| unsafe { w.bits(current_rtsr | line_mask) });
+        exti.rtsr().write(|w: &mut library::exti::rtsr::W| unsafe { w.bits(current_rtsr | line_mask) });
     }
     
     /// 禁用EXTI线上升沿触发
@@ -154,7 +154,7 @@ impl Exti {
         let line_mask = 1 << line;
         
         let current_rtsr = exti.rtsr().read().bits();
-        exti.rtsr().write(|w: &mut stm32f103::exti::rtsr::W| unsafe { w.bits(current_rtsr & !line_mask) });
+        exti.rtsr().write(|w: &mut library::exti::rtsr::W| unsafe { w.bits(current_rtsr & !line_mask) });
     }
     
     /// 启用EXTI线下降沿触发
@@ -164,7 +164,7 @@ impl Exti {
         let line_mask = 1 << line;
         
         let current_ftsr = exti.ftsr().read().bits();
-        exti.ftsr().write(|w: &mut stm32f103::exti::ftsr::W| unsafe { w.bits(current_ftsr | line_mask) });
+        exti.ftsr().write(|w: &mut library::exti::ftsr::W| unsafe { w.bits(current_ftsr | line_mask) });
     }
     
     /// 禁用EXTI线下降沿触发
@@ -174,7 +174,7 @@ impl Exti {
         let line_mask = 1 << line;
         
         let current_ftsr = exti.ftsr().read().bits();
-        exti.ftsr().write(|w: &mut stm32f103::exti::ftsr::W| unsafe { w.bits(current_ftsr & !line_mask) });
+        exti.ftsr().write(|w: &mut library::exti::ftsr::W| unsafe { w.bits(current_ftsr & !line_mask) });
     }
     
     /// 生成软件中断
@@ -184,7 +184,7 @@ impl Exti {
         let line_mask = 1 << line;
         
         let current_swier = exti.swier().read().bits();
-        exti.swier().write(|w: &mut stm32f103::exti::swier::W| unsafe { w.bits(current_swier | line_mask) });
+        exti.swier().write(|w: &mut library::exti::swier::W| unsafe { w.bits(current_swier | line_mask) });
     }
     
     /// 检查EXTI线是否挂起
@@ -203,7 +203,7 @@ impl Exti {
         let line_mask = 1 << line;
         
         // 写入1到PR寄存器的对应位来清除挂起状态
-        exti.pr().write(|w: &mut stm32f103::exti::pr::W| unsafe { w.bits(line_mask) });
+        exti.pr().write(|w: &mut library::exti::pr::W| unsafe { w.bits(line_mask) });
     }
     
     /// 清除所有EXTI线挂起状态
@@ -211,7 +211,7 @@ impl Exti {
         let exti = self.exti();
         
         // 写入1到所有位来清除中断标志
-        exti.pr().write(|w: &mut stm32f103::exti::pr::W| unsafe { w.bits(0x00FFFFFF) });
+        exti.pr().write(|w: &mut library::exti::pr::W| unsafe { w.bits(0x00FFFFFF) });
     }
 }
 

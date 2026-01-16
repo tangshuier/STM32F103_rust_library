@@ -1,10 +1,10 @@
-//! IWDG模块
+﻿//! IWDG模块
 //! 提供独立看门狗功能封装
 
 #![allow(unused)]
 
 // 导入内部生成的设备驱动库
-use stm32f103::*;
+use library::*;
 
 // 键值
 const IWDG_KEY_ENABLE: u16 = 0xCCCC;
@@ -33,8 +33,8 @@ impl Iwdg {
     }
     
     /// 获取IWDG寄存器块
-    unsafe fn iwdg(&self) -> &'static mut stm32f103::iwdg::RegisterBlock {
-        &mut *(0x40003000 as *mut stm32f103::iwdg::RegisterBlock)
+    unsafe fn iwdg(&self) -> &'static mut library::iwdg::RegisterBlock {
+        &mut *(0x40003000 as *mut library::iwdg::RegisterBlock)
     }
     
     /// 初始化IWDG
@@ -47,12 +47,12 @@ impl Iwdg {
         );
         
         // 设置预分频系数
-        iwdg.pr().write(|w: &mut stm32f103::iwdg::pr::W| w
+        iwdg.pr().write(|w: &mut library::iwdg::pr::W| w
             .pr().bits(prescaler as u8)
         );
         
         // 设置重载值
-        iwdg.rlr().write(|w: &mut stm32f103::iwdg::rlr::W| w
+        iwdg.rlr().write(|w: &mut library::iwdg::rlr::W| w
             .rl().bits(reload)
         );
         

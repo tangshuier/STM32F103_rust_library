@@ -1,4 +1,4 @@
-//! 系统初始化模块
+﻿//! 系统初始化模块
 //! 提供STM32F103C8T6的系统时钟初始化和管理功能
 
 #![allow(unused)]
@@ -7,9 +7,9 @@ use core::fmt;
 use core::arch::asm;
 use cortex_m::peripheral;
 use heapless::String;
-use stm32f103::*;
-use stm32f103::rcc::RegisterBlock as RccRegisterBlock;
-use stm32f103::flash::RegisterBlock as FlashRegisterBlock;
+use library::*;
+use library::rcc::RegisterBlock as RccRegisterBlock;
+use library::flash::RegisterBlock as FlashRegisterBlock;
 
 // 引用延时模块
 use super::delay;
@@ -280,8 +280,8 @@ pub fn init_with_config(config: &ClockConfig) -> InitResult {
     msg.push_str(" Hz").unwrap();
     log_info(msg.as_str());
     
-    let rcc = unsafe { &*stm32f103::Rcc::ptr() };
-    let flash = unsafe { &*stm32f103::Flash::ptr() };
+    let rcc = unsafe { &*library::Rcc::ptr() };
+    let flash = unsafe { &*library::Flash::ptr() };
     let scb = unsafe { &mut *(peripheral::SCB::PTR as *mut peripheral::SCB) };
     
     // 1. 验证配置
@@ -300,7 +300,7 @@ pub fn init_with_config(config: &ClockConfig) -> InitResult {
     // 3. 配置Flash
     log_debug("配置Flash参数");
     // 启用预取缓冲区
-    flash.acr().modify(|_, w: &mut stm32f103::flash::acr::W| w.prftbe().set_bit());
+    flash.acr().modify(|_, w: &mut library::flash::acr::W| w.prftbe().set_bit());
     
     // 根据系统时钟频率设置Flash延迟
     let latency = match config.sysclk {
@@ -321,7 +321,7 @@ pub fn init_with_config(config: &ClockConfig) -> InitResult {
             0x02 // 默认2个等待周期
         },
     };
-    flash.acr().modify(|_, w: &mut stm32f103::flash::acr::W| unsafe { w.latency().bits(latency) });
+    flash.acr().modify(|_, w: &mut library::flash::acr::W| unsafe { w.latency().bits(latency) });
     
     // 4. 处理时钟源配置
     if let Some(hse_freq) = config.hse_freq {
@@ -333,7 +333,7 @@ pub fn init_with_config(config: &ClockConfig) -> InitResult {
         log_info(msg.as_str());
         
         // 启用HSE（外部晶振）
-        rcc.cr().modify(|_, w: &mut stm32f103::rcc::cr::W| w.hseon().set_bit());
+        rcc.cr().modify(|_, w: &mut library::rcc::cr::W| w.hseon().set_bit());
         
         // 等待HSE就绪或超时
         log_debug("等待HSE就绪");
@@ -353,13 +353,13 @@ pub fn init_with_config(config: &ClockConfig) -> InitResult {
             // 5. 配置PLL
             // HSE作为PLL输入，设置倍频系数
             let pll_mul_bits = (config.pll_mul - 2) as u8; // PLL倍频系数从2开始
-            rcc.cfgr().modify(|_, w: &mut stm32f103::rcc::cfgr::W| {
+            rcc.cfgr().modify(|_, w: &mut library::rcc::cfgr::W| {
                 w.pllsrc().set_bit();
                 unsafe { w.pllmul().bits(pll_mul_bits) }
             });
             
             // 6. 启用PLL
-            rcc.cr().modify(|_, w: &mut stm32f103::rcc::cr::W| w.pllon().set_bit());
+            rcc.cr().modify(|_, w: &mut library::rcc::cr::W| w.pllon().set_bit());
             
             // 等待PLL就绪
             log_debug("等待PLL就绪");
@@ -371,7 +371,7 @@ pub fn init_with_config(config: &ClockConfig) -> InitResult {
             
             // 7. 选择PLL作为系统时钟源
             log_debug("切换系统时钟源到PLL");
-            rcc.cfgr().modify(|_, w: &mut stm32f103::rcc::cfgr::W| unsafe { w.sw().bits(0x02) });
+            rcc.cfgr().modify(|_, w: &mut library::rcc::cfgr::W| unsafe { w.sw().bits(0x02) });
             
             // 等待系统时钟切换到PLL
             while rcc.cfgr().read().sws().bits() != 0x02 {};
@@ -379,7 +379,7 @@ pub fn init_with_config(config: &ClockConfig) -> InitResult {
         } else {
             // 选择HSE作为系统时钟源
             log_debug("切换系统时钟源到HSE");
-            rcc.cfgr().modify(|_, w: &mut stm32f103::rcc::cfgr::W| unsafe { w.sw().bits(0x01) });
+            rcc.cfgr().modify(|_, w: &mut library::rcc::cfgr::W| unsafe { w.sw().bits(0x01) });
             
             // 等待系统时钟切换到HSE
             while rcc.cfgr().read().sws().bits() != 0x01 {};
@@ -388,7 +388,7 @@ pub fn init_with_config(config: &ClockConfig) -> InitResult {
     } else {
         // 使用HSI作为系统时钟源
         log_info("使用HSI作为时钟源（8MHz）");
-        rcc.cfgr().modify(|_, w: &mut stm32f103::rcc::cfgr::W| unsafe { w.sw().bits(0x00) });
+        rcc.cfgr().modify(|_, w: &mut library::rcc::cfgr::W| unsafe { w.sw().bits(0x00) });
         
         // 等待系统时钟切换到HSI
         while rcc.cfgr().read().sws().bits() != 0x00 {};
@@ -411,7 +411,7 @@ pub fn init_with_config(config: &ClockConfig) -> InitResult {
         512 => 0x0F,
         _ => 0x00,
     };
-    rcc.cfgr().modify(|_, w: &mut stm32f103::rcc::cfgr::W| unsafe { w.hpre().bits(hpre_bits) });
+    rcc.cfgr().modify(|_, w: &mut library::rcc::cfgr::W| unsafe { w.hpre().bits(hpre_bits) });
     
     // 配置APB2预分频
     let ppre2_bits = match config.ppre2 {
@@ -422,7 +422,7 @@ pub fn init_with_config(config: &ClockConfig) -> InitResult {
         16 => 0x07,
         _ => 0x00,
     };
-    rcc.cfgr().modify(|_, w: &mut stm32f103::rcc::cfgr::W| unsafe { w.ppre2().bits(ppre2_bits) });
+    rcc.cfgr().modify(|_, w: &mut library::rcc::cfgr::W| unsafe { w.ppre2().bits(ppre2_bits) });
     
     // 配置APB1预分频
     let ppre1_bits = match config.ppre1 {
@@ -433,7 +433,7 @@ pub fn init_with_config(config: &ClockConfig) -> InitResult {
         16 => 0x07,
         _ => 0x00,
     };
-    rcc.cfgr().modify(|_, w: &mut stm32f103::rcc::cfgr::W| unsafe { w.ppre1().bits(ppre1_bits) });
+    rcc.cfgr().modify(|_, w: &mut library::rcc::cfgr::W| unsafe { w.ppre1().bits(ppre1_bits) });
     
     // 配置ADC预分频
     let adcpre_bits = match config.adcpre {
@@ -443,7 +443,7 @@ pub fn init_with_config(config: &ClockConfig) -> InitResult {
         8 => 0x03,
         _ => 0x00,
     };
-    rcc.cfgr().modify(|_, w: &mut stm32f103::rcc::cfgr::W| unsafe { w.adcpre().bits(adcpre_bits) });
+    rcc.cfgr().modify(|_, w: &mut library::rcc::cfgr::W| unsafe { w.adcpre().bits(adcpre_bits) });
     
     // 9. 设置向量表偏移
     log_debug("设置向量表偏移");
@@ -495,9 +495,9 @@ where
 /// # 返回值
 /// - `true`：重置成功
 /// - `false`：HSI启动失败
-fn reset_rcc_config(rcc: &stm32f103::rcc::RegisterBlock) -> bool {
+fn reset_rcc_config(rcc: &library::rcc::RegisterBlock) -> bool {
     // 设置HSION位（启用内部高速时钟作为备用）
-    rcc.cr().modify(|_, w: &mut stm32f103::rcc::cr::W| w.hsion().set_bit());
+    rcc.cr().modify(|_, w: &mut library::rcc::cr::W| w.hsion().set_bit());
     
     // 等待HSI就绪
     if !wait_for_flag(|| rcc.cr().read().hsirdy().bit_is_set(), 1000) {
@@ -506,27 +506,27 @@ fn reset_rcc_config(rcc: &stm32f103::rcc::RegisterBlock) -> bool {
     
     // 重置SW, HPRE, PPRE1, PPRE2, ADCPRE和MCO位
     unsafe {
-        rcc.cfgr().modify(|_, w: &mut stm32f103::rcc::cfgr::W| w.bits(0xF8FF0000));
+        rcc.cfgr().modify(|_, w: &mut library::rcc::cfgr::W| w.bits(0xF8FF0000));
     }
     
     // 重置HSEON, CSSON和PLLON位
     unsafe {
-        rcc.cr().modify(|_, w: &mut stm32f103::rcc::cr::W| w.bits(0xFEF6FFFF));
+        rcc.cr().modify(|_, w: &mut library::rcc::cr::W| w.bits(0xFEF6FFFF));
     }
     
     // 重置HSEBYP位
     unsafe {
-        rcc.cr().modify(|_, w: &mut stm32f103::rcc::cr::W| w.bits(0xFFFBFFFF));
+        rcc.cr().modify(|_, w: &mut library::rcc::cr::W| w.bits(0xFFFBFFFF));
     }
     
     // 重置PLLSRC, PLLXTPRE, PLLMUL和USBPRE/OTGFSPRE位
     unsafe {
-        rcc.cfgr().modify(|_, w: &mut stm32f103::rcc::cfgr::W| w.bits(0xFF80FFFF));
+        rcc.cfgr().modify(|_, w: &mut library::rcc::cfgr::W| w.bits(0xFF80FFFF));
     }
     
     // 禁用所有中断和清除挂起位
     unsafe {
-        rcc.cir().write(|w: &mut stm32f103::rcc::cir::W| w.bits(0x009F0000));
+        rcc.cir().write(|w: &mut library::rcc::cir::W| w.bits(0x009F0000));
     }
     
     true
@@ -534,7 +534,7 @@ fn reset_rcc_config(rcc: &stm32f103::rcc::RegisterBlock) -> bool {
 
 /// 获取系统时钟频率
 pub fn get_system_clocks() -> SystemClocks {
-    let rcc = unsafe { &*stm32f103::Rcc::ptr() };
+    let rcc = unsafe { &*library::Rcc::ptr() };
     
     // 计算系统时钟频率
     let sysclk = match rcc.cfgr().read().sws().bits() {
@@ -602,203 +602,203 @@ pub fn get_system_clocks() -> SystemClocks {
 
 /// 使能或禁用外设时钟
 pub fn set_peripheral_clock(periph: PeripheralClock, enable: bool) {
-    let rcc = unsafe { &*stm32f103::Rcc::ptr() };
+    let rcc = unsafe { &*library::Rcc::ptr() };
     
     match periph {
         // AHB外设
         PeripheralClock::DMA1 => if enable {
-            rcc.ahbenr().modify(|_, w: &mut stm32f103::rcc::ahbenr::W| w.dma1en().set_bit());
+            rcc.ahbenr().modify(|_, w: &mut library::rcc::ahbenr::W| w.dma1en().set_bit());
         } else {
-            rcc.ahbenr().modify(|_, w: &mut stm32f103::rcc::ahbenr::W| w.dma1en().clear_bit());
+            rcc.ahbenr().modify(|_, w: &mut library::rcc::ahbenr::W| w.dma1en().clear_bit());
         },
         PeripheralClock::DMA2 => if enable {
-            rcc.ahbenr().modify(|_, w: &mut stm32f103::rcc::ahbenr::W| w.dma2en().set_bit());
+            rcc.ahbenr().modify(|_, w: &mut library::rcc::ahbenr::W| w.dma2en().set_bit());
         } else {
-            rcc.ahbenr().modify(|_, w: &mut stm32f103::rcc::ahbenr::W| w.dma2en().clear_bit());
+            rcc.ahbenr().modify(|_, w: &mut library::rcc::ahbenr::W| w.dma2en().clear_bit());
         },
         PeripheralClock::SRAM => if enable {
-            rcc.ahbenr().modify(|_, w: &mut stm32f103::rcc::ahbenr::W| w.sramen().set_bit());
+            rcc.ahbenr().modify(|_, w: &mut library::rcc::ahbenr::W| w.sramen().set_bit());
         } else {
-            rcc.ahbenr().modify(|_, w: &mut stm32f103::rcc::ahbenr::W| w.sramen().clear_bit());
+            rcc.ahbenr().modify(|_, w: &mut library::rcc::ahbenr::W| w.sramen().clear_bit());
         },
         PeripheralClock::FLITF => if enable {
-            rcc.ahbenr().modify(|_, w: &mut stm32f103::rcc::ahbenr::W| w.flitfen().set_bit());
+            rcc.ahbenr().modify(|_, w: &mut library::rcc::ahbenr::W| w.flitfen().set_bit());
         } else {
-            rcc.ahbenr().modify(|_, w: &mut stm32f103::rcc::ahbenr::W| w.flitfen().clear_bit());
+            rcc.ahbenr().modify(|_, w: &mut library::rcc::ahbenr::W| w.flitfen().clear_bit());
         },
         PeripheralClock::CRC => if enable {
-            rcc.ahbenr().modify(|_, w: &mut stm32f103::rcc::ahbenr::W| w.crcen().set_bit());
+            rcc.ahbenr().modify(|_, w: &mut library::rcc::ahbenr::W| w.crcen().set_bit());
         } else {
-            rcc.ahbenr().modify(|_, w: &mut stm32f103::rcc::ahbenr::W| w.crcen().clear_bit());
+            rcc.ahbenr().modify(|_, w: &mut library::rcc::ahbenr::W| w.crcen().clear_bit());
         },
         
         // APB2外设
         PeripheralClock::AFIO => if enable {
-            rcc.apb2enr().modify(|_, w: &mut stm32f103::rcc::apb2enr::W| w.afioen().set_bit());
+            rcc.apb2enr().modify(|_, w: &mut library::rcc::apb2enr::W| w.afioen().set_bit());
         } else {
-            rcc.apb2enr().modify(|_, w: &mut stm32f103::rcc::apb2enr::W| w.afioen().clear_bit());
+            rcc.apb2enr().modify(|_, w: &mut library::rcc::apb2enr::W| w.afioen().clear_bit());
         },
         PeripheralClock::GPIOA => if enable {
-            rcc.apb2enr().modify(|_, w: &mut stm32f103::rcc::apb2enr::W| w.iopaen().set_bit());
+            rcc.apb2enr().modify(|_, w: &mut library::rcc::apb2enr::W| w.iopaen().set_bit());
         } else {
-            rcc.apb2enr().modify(|_, w: &mut stm32f103::rcc::apb2enr::W| w.iopaen().clear_bit());
+            rcc.apb2enr().modify(|_, w: &mut library::rcc::apb2enr::W| w.iopaen().clear_bit());
         },
         PeripheralClock::GPIOB => if enable {
-            rcc.apb2enr().modify(|_, w: &mut stm32f103::rcc::apb2enr::W| w.iopben().set_bit());
+            rcc.apb2enr().modify(|_, w: &mut library::rcc::apb2enr::W| w.iopben().set_bit());
         } else {
-            rcc.apb2enr().modify(|_, w: &mut stm32f103::rcc::apb2enr::W| w.iopben().clear_bit());
+            rcc.apb2enr().modify(|_, w: &mut library::rcc::apb2enr::W| w.iopben().clear_bit());
         },
         PeripheralClock::GPIOC => if enable {
-            rcc.apb2enr().modify(|_, w: &mut stm32f103::rcc::apb2enr::W| w.iopcen().set_bit());
+            rcc.apb2enr().modify(|_, w: &mut library::rcc::apb2enr::W| w.iopcen().set_bit());
         } else {
-            rcc.apb2enr().modify(|_, w: &mut stm32f103::rcc::apb2enr::W| w.iopcen().clear_bit());
+            rcc.apb2enr().modify(|_, w: &mut library::rcc::apb2enr::W| w.iopcen().clear_bit());
         },
         PeripheralClock::GPIOD => if enable {
-            rcc.apb2enr().modify(|_, w: &mut stm32f103::rcc::apb2enr::W| w.iopden().set_bit());
+            rcc.apb2enr().modify(|_, w: &mut library::rcc::apb2enr::W| w.iopden().set_bit());
         } else {
-            rcc.apb2enr().modify(|_, w: &mut stm32f103::rcc::apb2enr::W| w.iopden().clear_bit());
+            rcc.apb2enr().modify(|_, w: &mut library::rcc::apb2enr::W| w.iopden().clear_bit());
         },
         PeripheralClock::GPIOE => if enable {
-            rcc.apb2enr().modify(|_, w: &mut stm32f103::rcc::apb2enr::W| w.iopeen().set_bit());
+            rcc.apb2enr().modify(|_, w: &mut library::rcc::apb2enr::W| w.iopeen().set_bit());
         } else {
-            rcc.apb2enr().modify(|_, w: &mut stm32f103::rcc::apb2enr::W| w.iopeen().clear_bit());
+            rcc.apb2enr().modify(|_, w: &mut library::rcc::apb2enr::W| w.iopeen().clear_bit());
         },
         PeripheralClock::GPIOF => if enable {
-            rcc.apb2enr().modify(|_, w: &mut stm32f103::rcc::apb2enr::W| w.iopfen().set_bit());
+            rcc.apb2enr().modify(|_, w: &mut library::rcc::apb2enr::W| w.iopfen().set_bit());
         } else {
-            rcc.apb2enr().modify(|_, w: &mut stm32f103::rcc::apb2enr::W| w.iopfen().clear_bit());
+            rcc.apb2enr().modify(|_, w: &mut library::rcc::apb2enr::W| w.iopfen().clear_bit());
         },
         PeripheralClock::GPIOG => if enable {
-            rcc.apb2enr().modify(|_, w: &mut stm32f103::rcc::apb2enr::W| w.iopgen().set_bit());
+            rcc.apb2enr().modify(|_, w: &mut library::rcc::apb2enr::W| w.iopgen().set_bit());
         } else {
-            rcc.apb2enr().modify(|_, w: &mut stm32f103::rcc::apb2enr::W| w.iopgen().clear_bit());
+            rcc.apb2enr().modify(|_, w: &mut library::rcc::apb2enr::W| w.iopgen().clear_bit());
         },
         PeripheralClock::ADC1 => if enable {
-            rcc.apb2enr().modify(|_, w: &mut stm32f103::rcc::apb2enr::W| w.adc1en().set_bit());
+            rcc.apb2enr().modify(|_, w: &mut library::rcc::apb2enr::W| w.adc1en().set_bit());
         } else {
-            rcc.apb2enr().modify(|_, w: &mut stm32f103::rcc::apb2enr::W| w.adc1en().clear_bit());
+            rcc.apb2enr().modify(|_, w: &mut library::rcc::apb2enr::W| w.adc1en().clear_bit());
         },
         PeripheralClock::ADC2 => if enable {
-            rcc.apb2enr().modify(|_, w: &mut stm32f103::rcc::apb2enr::W| w.adc2en().set_bit());
+            rcc.apb2enr().modify(|_, w: &mut library::rcc::apb2enr::W| w.adc2en().set_bit());
         } else {
-            rcc.apb2enr().modify(|_, w: &mut stm32f103::rcc::apb2enr::W| w.adc2en().clear_bit());
+            rcc.apb2enr().modify(|_, w: &mut library::rcc::apb2enr::W| w.adc2en().clear_bit());
         },
         PeripheralClock::TIM1 => if enable {
-            rcc.apb2enr().modify(|_, w: &mut stm32f103::rcc::apb2enr::W| w.tim1en().set_bit());
+            rcc.apb2enr().modify(|_, w: &mut library::rcc::apb2enr::W| w.tim1en().set_bit());
         } else {
-            rcc.apb2enr().modify(|_, w: &mut stm32f103::rcc::apb2enr::W| w.tim1en().clear_bit());
+            rcc.apb2enr().modify(|_, w: &mut library::rcc::apb2enr::W| w.tim1en().clear_bit());
         },
         PeripheralClock::SPI1 => if enable {
-            rcc.apb2enr().modify(|_, w: &mut stm32f103::rcc::apb2enr::W| w.spi1en().set_bit());
+            rcc.apb2enr().modify(|_, w: &mut library::rcc::apb2enr::W| w.spi1en().set_bit());
         } else {
-            rcc.apb2enr().modify(|_, w: &mut stm32f103::rcc::apb2enr::W| w.spi1en().clear_bit());
+            rcc.apb2enr().modify(|_, w: &mut library::rcc::apb2enr::W| w.spi1en().clear_bit());
         },
         PeripheralClock::USART1 => if enable {
-            rcc.apb2enr().modify(|_, w: &mut stm32f103::rcc::apb2enr::W| w.usart1en().set_bit());
+            rcc.apb2enr().modify(|_, w: &mut library::rcc::apb2enr::W| w.usart1en().set_bit());
         } else {
-            rcc.apb2enr().modify(|_, w: &mut stm32f103::rcc::apb2enr::W| w.usart1en().clear_bit());
+            rcc.apb2enr().modify(|_, w: &mut library::rcc::apb2enr::W| w.usart1en().clear_bit());
         },
         
         // APB1外设
         PeripheralClock::TIM2 => if enable {
-            rcc.apb1enr().modify(|_, w: &mut stm32f103::rcc::apb1enr::W| w.tim2en().set_bit());
+            rcc.apb1enr().modify(|_, w: &mut library::rcc::apb1enr::W| w.tim2en().set_bit());
         } else {
-            rcc.apb1enr().modify(|_, w: &mut stm32f103::rcc::apb1enr::W| w.tim2en().clear_bit());
+            rcc.apb1enr().modify(|_, w: &mut library::rcc::apb1enr::W| w.tim2en().clear_bit());
         },
         PeripheralClock::TIM3 => if enable {
-            rcc.apb1enr().modify(|_, w: &mut stm32f103::rcc::apb1enr::W| w.tim3en().set_bit());
+            rcc.apb1enr().modify(|_, w: &mut library::rcc::apb1enr::W| w.tim3en().set_bit());
         } else {
-            rcc.apb1enr().modify(|_, w: &mut stm32f103::rcc::apb1enr::W| w.tim3en().clear_bit());
+            rcc.apb1enr().modify(|_, w: &mut library::rcc::apb1enr::W| w.tim3en().clear_bit());
         },
         PeripheralClock::TIM4 => if enable {
-            rcc.apb1enr().modify(|_, w: &mut stm32f103::rcc::apb1enr::W| w.tim4en().set_bit());
+            rcc.apb1enr().modify(|_, w: &mut library::rcc::apb1enr::W| w.tim4en().set_bit());
         } else {
-            rcc.apb1enr().modify(|_, w: &mut stm32f103::rcc::apb1enr::W| w.tim4en().clear_bit());
+            rcc.apb1enr().modify(|_, w: &mut library::rcc::apb1enr::W| w.tim4en().clear_bit());
         },
         PeripheralClock::TIM5 => if enable {
-            rcc.apb1enr().modify(|_, w: &mut stm32f103::rcc::apb1enr::W| w.tim5en().set_bit());
+            rcc.apb1enr().modify(|_, w: &mut library::rcc::apb1enr::W| w.tim5en().set_bit());
         } else {
-            rcc.apb1enr().modify(|_, w: &mut stm32f103::rcc::apb1enr::W| w.tim5en().clear_bit());
+            rcc.apb1enr().modify(|_, w: &mut library::rcc::apb1enr::W| w.tim5en().clear_bit());
         },
         PeripheralClock::TIM6 => if enable {
-            rcc.apb1enr().modify(|_, w: &mut stm32f103::rcc::apb1enr::W| w.tim6en().set_bit());
+            rcc.apb1enr().modify(|_, w: &mut library::rcc::apb1enr::W| w.tim6en().set_bit());
         } else {
-            rcc.apb1enr().modify(|_, w: &mut stm32f103::rcc::apb1enr::W| w.tim6en().clear_bit());
+            rcc.apb1enr().modify(|_, w: &mut library::rcc::apb1enr::W| w.tim6en().clear_bit());
         },
         PeripheralClock::TIM7 => if enable {
-            rcc.apb1enr().modify(|_, w: &mut stm32f103::rcc::apb1enr::W| w.tim7en().set_bit());
+            rcc.apb1enr().modify(|_, w: &mut library::rcc::apb1enr::W| w.tim7en().set_bit());
         } else {
-            rcc.apb1enr().modify(|_, w: &mut stm32f103::rcc::apb1enr::W| w.tim7en().clear_bit());
+            rcc.apb1enr().modify(|_, w: &mut library::rcc::apb1enr::W| w.tim7en().clear_bit());
         },
         PeripheralClock::WWDG => if enable {
-            rcc.apb1enr().modify(|_, w: &mut stm32f103::rcc::apb1enr::W| w.wwdgen().set_bit());
+            rcc.apb1enr().modify(|_, w: &mut library::rcc::apb1enr::W| w.wwdgen().set_bit());
         } else {
-            rcc.apb1enr().modify(|_, w: &mut stm32f103::rcc::apb1enr::W| w.wwdgen().clear_bit());
+            rcc.apb1enr().modify(|_, w: &mut library::rcc::apb1enr::W| w.wwdgen().clear_bit());
         },
         PeripheralClock::SPI2 => if enable {
-            rcc.apb1enr().modify(|_, w: &mut stm32f103::rcc::apb1enr::W| w.spi2en().set_bit());
+            rcc.apb1enr().modify(|_, w: &mut library::rcc::apb1enr::W| w.spi2en().set_bit());
         } else {
-            rcc.apb1enr().modify(|_, w: &mut stm32f103::rcc::apb1enr::W| w.spi2en().clear_bit());
+            rcc.apb1enr().modify(|_, w: &mut library::rcc::apb1enr::W| w.spi2en().clear_bit());
         },
         PeripheralClock::SPI3 => if enable {
-            rcc.apb1enr().modify(|_, w: &mut stm32f103::rcc::apb1enr::W| w.spi3en().set_bit());
+            rcc.apb1enr().modify(|_, w: &mut library::rcc::apb1enr::W| w.spi3en().set_bit());
         } else {
-            rcc.apb1enr().modify(|_, w: &mut stm32f103::rcc::apb1enr::W| w.spi3en().clear_bit());
+            rcc.apb1enr().modify(|_, w: &mut library::rcc::apb1enr::W| w.spi3en().clear_bit());
         },
         PeripheralClock::USART2 => if enable {
-            rcc.apb1enr().modify(|_, w: &mut stm32f103::rcc::apb1enr::W| w.usart2en().set_bit());
+            rcc.apb1enr().modify(|_, w: &mut library::rcc::apb1enr::W| w.usart2en().set_bit());
         } else {
-            rcc.apb1enr().modify(|_, w: &mut stm32f103::rcc::apb1enr::W| w.usart2en().clear_bit());
+            rcc.apb1enr().modify(|_, w: &mut library::rcc::apb1enr::W| w.usart2en().clear_bit());
         },
         PeripheralClock::USART3 => if enable {
-            rcc.apb1enr().modify(|_, w: &mut stm32f103::rcc::apb1enr::W| w.usart3en().set_bit());
+            rcc.apb1enr().modify(|_, w: &mut library::rcc::apb1enr::W| w.usart3en().set_bit());
         } else {
-            rcc.apb1enr().modify(|_, w: &mut stm32f103::rcc::apb1enr::W| w.usart3en().clear_bit());
+            rcc.apb1enr().modify(|_, w: &mut library::rcc::apb1enr::W| w.usart3en().clear_bit());
         },
         PeripheralClock::UART4 => if enable {
-            rcc.apb1enr().modify(|_, w: &mut stm32f103::rcc::apb1enr::W| w.uart4en().set_bit());
+            rcc.apb1enr().modify(|_, w: &mut library::rcc::apb1enr::W| w.uart4en().set_bit());
         } else {
-            rcc.apb1enr().modify(|_, w: &mut stm32f103::rcc::apb1enr::W| w.uart4en().clear_bit());
+            rcc.apb1enr().modify(|_, w: &mut library::rcc::apb1enr::W| w.uart4en().clear_bit());
         },
         PeripheralClock::UART5 => if enable {
-            rcc.apb1enr().modify(|_, w: &mut stm32f103::rcc::apb1enr::W| w.uart5en().set_bit());
+            rcc.apb1enr().modify(|_, w: &mut library::rcc::apb1enr::W| w.uart5en().set_bit());
         } else {
-            rcc.apb1enr().modify(|_, w: &mut stm32f103::rcc::apb1enr::W| w.uart5en().clear_bit());
+            rcc.apb1enr().modify(|_, w: &mut library::rcc::apb1enr::W| w.uart5en().clear_bit());
         },
         PeripheralClock::I2C1 => if enable {
-            rcc.apb1enr().modify(|_, w: &mut stm32f103::rcc::apb1enr::W| w.i2c1en().set_bit());
+            rcc.apb1enr().modify(|_, w: &mut library::rcc::apb1enr::W| w.i2c1en().set_bit());
         } else {
-            rcc.apb1enr().modify(|_, w: &mut stm32f103::rcc::apb1enr::W| w.i2c1en().clear_bit());
+            rcc.apb1enr().modify(|_, w: &mut library::rcc::apb1enr::W| w.i2c1en().clear_bit());
         },
         PeripheralClock::I2C2 => if enable {
-            rcc.apb1enr().modify(|_, w: &mut stm32f103::rcc::apb1enr::W| w.i2c2en().set_bit());
+            rcc.apb1enr().modify(|_, w: &mut library::rcc::apb1enr::W| w.i2c2en().set_bit());
         } else {
-            rcc.apb1enr().modify(|_, w: &mut stm32f103::rcc::apb1enr::W| w.i2c2en().clear_bit());
+            rcc.apb1enr().modify(|_, w: &mut library::rcc::apb1enr::W| w.i2c2en().clear_bit());
         },
         PeripheralClock::USB => if enable {
-            rcc.apb1enr().modify(|_, w: &mut stm32f103::rcc::apb1enr::W| w.usben().set_bit());
+            rcc.apb1enr().modify(|_, w: &mut library::rcc::apb1enr::W| w.usben().set_bit());
         } else {
-            rcc.apb1enr().modify(|_, w: &mut stm32f103::rcc::apb1enr::W| w.usben().clear_bit());
+            rcc.apb1enr().modify(|_, w: &mut library::rcc::apb1enr::W| w.usben().clear_bit());
         },
         PeripheralClock::CAN1 => if enable {
-            rcc.apb1enr().modify(|_, w: &mut stm32f103::rcc::apb1enr::W| w.canen().set_bit());
+            rcc.apb1enr().modify(|_, w: &mut library::rcc::apb1enr::W| w.canen().set_bit());
         } else {
-            rcc.apb1enr().modify(|_, w: &mut stm32f103::rcc::apb1enr::W| w.canen().clear_bit());
+            rcc.apb1enr().modify(|_, w: &mut library::rcc::apb1enr::W| w.canen().clear_bit());
         },
         PeripheralClock::BKP => if enable {
-            rcc.apb1enr().modify(|_, w: &mut stm32f103::rcc::apb1enr::W| w.bkpen().set_bit());
+            rcc.apb1enr().modify(|_, w: &mut library::rcc::apb1enr::W| w.bkpen().set_bit());
         } else {
-            rcc.apb1enr().modify(|_, w: &mut stm32f103::rcc::apb1enr::W| w.bkpen().clear_bit());
+            rcc.apb1enr().modify(|_, w: &mut library::rcc::apb1enr::W| w.bkpen().clear_bit());
         },
         PeripheralClock::PWR => if enable {
-            rcc.apb1enr().modify(|_, w: &mut stm32f103::rcc::apb1enr::W| w.pwren().set_bit());
+            rcc.apb1enr().modify(|_, w: &mut library::rcc::apb1enr::W| w.pwren().set_bit());
         } else {
-            rcc.apb1enr().modify(|_, w: &mut stm32f103::rcc::apb1enr::W| w.pwren().clear_bit());
+            rcc.apb1enr().modify(|_, w: &mut library::rcc::apb1enr::W| w.pwren().clear_bit());
         },
         PeripheralClock::DAC => if enable {
-            rcc.apb1enr().modify(|_, w: &mut stm32f103::rcc::apb1enr::W| w.dacen().set_bit());
+            rcc.apb1enr().modify(|_, w: &mut library::rcc::apb1enr::W| w.dacen().set_bit());
         } else {
-            rcc.apb1enr().modify(|_, w: &mut stm32f103::rcc::apb1enr::W| w.dacen().clear_bit());
+            rcc.apb1enr().modify(|_, w: &mut library::rcc::apb1enr::W| w.dacen().clear_bit());
         },
     }
 }
@@ -807,7 +807,7 @@ pub fn set_peripheral_clock(periph: PeripheralClock, enable: bool) {
 /// 
 /// 确保USB时钟为48MHz，这是USB功能正常工作的必要条件
 pub fn configure_usb_clock() {
-    let rcc = unsafe { &*stm32f103::Rcc::ptr() };
+    let rcc = unsafe { &*library::Rcc::ptr() };
     
     // 配置USB时钟为48MHz
     // USB时钟 = PLLCLK / 1.5 = 48MHz（当PLLCLK为72MHz时）
@@ -828,7 +828,7 @@ pub fn configure_usb_clock() {
 
 /// 获取系统复位原因
 pub fn get_reset_reason() -> heapless::String<64> {
-    let rcc = unsafe { &*stm32f103::Rcc::ptr() };
+    let rcc = unsafe { &*library::Rcc::ptr() };
     let csr = rcc.csr().read();
     
     let mut reasons = heapless::Vec::<heapless::String<16>, 6>::new();
@@ -853,7 +853,7 @@ pub fn get_reset_reason() -> heapless::String<64> {
     }
     
     // 清除复位标志
-    rcc.csr().write(|w: &mut stm32f103::rcc::csr::W| w.rmvf().set_bit());
+    rcc.csr().write(|w: &mut library::rcc::csr::W| w.rmvf().set_bit());
     
     if reasons.is_empty() {
         heapless::String::from("未知复位原因")
@@ -894,8 +894,8 @@ pub enum LowPowerMode {
 /// - `mode`：要进入的低功耗模式
 pub fn enter_low_power_mode(mode: LowPowerMode) {
     let scb = unsafe { &mut *(peripheral::SCB::PTR as *mut peripheral::SCB) };
-    let pwr = unsafe { &*stm32f103::Pwr::ptr() };
-    let rcc = unsafe { &*stm32f103::Rcc::ptr() };
+    let pwr = unsafe { &*library::Pwr::ptr() };
+    let rcc = unsafe { &*library::Rcc::ptr() };
     
     // 首先使能PWR时钟
     set_peripheral_clock(PeripheralClock::PWR, true);
@@ -959,7 +959,7 @@ pub fn enter_low_power_mode(mode: LowPowerMode) {
 /// # 参数
 /// - `enable_wakeup_pin`：是否启用唤醒引脚
 pub fn configure_wakeup_source(enable_wakeup_pin: bool) {
-    let pwr = unsafe { &*stm32f103::Pwr::ptr() };
+    let pwr = unsafe { &*library::Pwr::ptr() };
     
     // 使能PWR时钟
     set_peripheral_clock(PeripheralClock::PWR, true);
@@ -1029,7 +1029,7 @@ where
 /// # 参数
 /// - `enable`：是否启用CSS
 pub fn configure_clock_security_system(enable: bool) {
-    let rcc = unsafe { &*stm32f103::Rcc::ptr() };
+    let rcc = unsafe { &*library::Rcc::ptr() };
     
     if enable {
         // 启用时钟安全系统
@@ -1046,7 +1046,7 @@ pub fn configure_clock_security_system(enable: bool) {
 /// - `true`：CSS已启用
 /// - `false`：CSS已禁用
 pub fn is_clock_security_enabled() -> bool {
-    let rcc = unsafe { &*stm32f103::Rcc::ptr() };
+    let rcc = unsafe { &*library::Rcc::ptr() };
     rcc.cr().read().csson().bit_is_set()
 }
 
@@ -1056,13 +1056,13 @@ pub fn is_clock_security_enabled() -> bool {
 /// - `true`：HSE发生故障
 /// - `false`：HSE正常
 pub fn has_hse_failed() -> bool {
-    let rcc = unsafe { &*stm32f103::Rcc::ptr() };
+    let rcc = unsafe { &*library::Rcc::ptr() };
     rcc.cir().read().cssf().bit_is_set()
 }
 
 /// 清除HSE故障标志
 pub fn clear_hse_fault_flag() {
-    let rcc = unsafe { &*stm32f103::Rcc::ptr() };
+    let rcc = unsafe { &*library::Rcc::ptr() };
     rcc.cir().write(|w| w.cssc().set_bit());
 }
 
@@ -1205,7 +1205,7 @@ pub fn read_vrefint() -> Option<u16> {
 /// # 返回值
 /// 系统状态结构体
 pub fn get_system_status() -> SystemStatus {
-    let rcc = unsafe { &*stm32f103::Rcc::ptr() };
+    let rcc = unsafe { &*library::Rcc::ptr() };
     let clocks = get_system_clocks();
     
     SystemStatus {

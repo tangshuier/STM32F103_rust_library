@@ -1,11 +1,11 @@
-//! 定时器模块
+﻿//! 定时器模块
 //! 提供基本的定时器功能
 
 // 屏蔽未使用代码警告
 #![allow(unused)]
 
 // 使用内部生成的设备驱动库
-use stm32f103::*;
+use library::*;
 use core::ops::DerefMut;
 use crate::bsp::rcc::RccDriver;
 
