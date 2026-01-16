@@ -104,7 +104,7 @@ impl Dma {
         }
     }
     
-        /// 初始化DMA通道
+    /// 初始化DMA通道
     pub unsafe fn init(
         &self,
         direction: DmaDirection,
@@ -115,32 +115,507 @@ impl Dma {
         priority: DmaChannelPriority,
         circular_mode: DmaCircularMode,
     ) {
-        // 由于内部库中DMA寄存器结构不同，暂时为空实现
+        let dma = self.get_dma();
+        
+        // 根据通道选择对应的CCR寄存器
+        match self.channel {
+            DmaChannel::Channel1 => {
+                dma.ccr1().write(|w| {
+                    // 配置数据传输方向
+                    match direction {
+                        DmaDirection::PeripheralToMemory => w.dir().clear_bit(),
+                        DmaDirection::MemoryToPeripheral => w.dir().set_bit(),
+                        DmaDirection::MemoryToMemory => {
+                            w.dir().set_bit();
+                            w.mem2mem().set_bit()
+                        },
+                    };
+                    
+                    // 配置外设地址增量模式
+                    match peripheral_increment {
+                        DmaPeripheralIncrementMode::Disabled => w.pinc().clear_bit(),
+                        DmaPeripheralIncrementMode::Enabled => w.pinc().set_bit(),
+                    };
+                    
+                    // 配置内存地址增量模式
+                    match memory_increment {
+                        DmaMemoryIncrementMode::Disabled => w.minc().clear_bit(),
+                        DmaMemoryIncrementMode::Enabled => w.minc().set_bit(),
+                    };
+                    
+                    // 配置外设数据宽度
+                    w.psize().bits(peripheral_data_size as u8);
+                    
+                    // 配置内存数据宽度
+                    w.msize().bits(memory_data_size as u8);
+                    
+                    // 配置通道优先级
+                    w.pl().bits(priority as u8);
+                    
+                    // 配置循环模式
+                    match circular_mode {
+                        DmaCircularMode::Disabled => w.circ().clear_bit(),
+                        DmaCircularMode::Enabled => w.circ().set_bit(),
+                    }
+                });
+            },
+            DmaChannel::Channel2 => {
+                dma.ccr2().write(|w| {
+                    // 配置数据传输方向
+                    match direction {
+                        DmaDirection::PeripheralToMemory => w.dir().clear_bit(),
+                        DmaDirection::MemoryToPeripheral => w.dir().set_bit(),
+                        DmaDirection::MemoryToMemory => {
+                            w.dir().set_bit();
+                            w.mem2mem().set_bit()
+                        },
+                    };
+                    
+                    // 配置外设地址增量模式
+                    match peripheral_increment {
+                        DmaPeripheralIncrementMode::Disabled => w.pinc().clear_bit(),
+                        DmaPeripheralIncrementMode::Enabled => w.pinc().set_bit(),
+                    };
+                    
+                    // 配置内存地址增量模式
+                    match memory_increment {
+                        DmaMemoryIncrementMode::Disabled => w.minc().clear_bit(),
+                        DmaMemoryIncrementMode::Enabled => w.minc().set_bit(),
+                    };
+                    
+                    // 配置外设数据宽度
+                    w.psize().bits(peripheral_data_size as u8);
+                    
+                    // 配置内存数据宽度
+                    w.msize().bits(memory_data_size as u8);
+                    
+                    // 配置通道优先级
+                    w.pl().bits(priority as u8);
+                    
+                    // 配置循环模式
+                    match circular_mode {
+                        DmaCircularMode::Disabled => w.circ().clear_bit(),
+                        DmaCircularMode::Enabled => w.circ().set_bit(),
+                    }
+                });
+            },
+            DmaChannel::Channel3 => {
+                dma.ccr3().write(|w| {
+                    // 配置数据传输方向
+                    match direction {
+                        DmaDirection::PeripheralToMemory => w.dir().clear_bit(),
+                        DmaDirection::MemoryToPeripheral => w.dir().set_bit(),
+                        DmaDirection::MemoryToMemory => {
+                            w.dir().set_bit();
+                            w.mem2mem().set_bit()
+                        },
+                    };
+                    
+                    // 配置外设地址增量模式
+                    match peripheral_increment {
+                        DmaPeripheralIncrementMode::Disabled => w.pinc().clear_bit(),
+                        DmaPeripheralIncrementMode::Enabled => w.pinc().set_bit(),
+                    };
+                    
+                    // 配置内存地址增量模式
+                    match memory_increment {
+                        DmaMemoryIncrementMode::Disabled => w.minc().clear_bit(),
+                        DmaMemoryIncrementMode::Enabled => w.minc().set_bit(),
+                    };
+                    
+                    // 配置外设数据宽度
+                    w.psize().bits(peripheral_data_size as u8);
+                    
+                    // 配置内存数据宽度
+                    w.msize().bits(memory_data_size as u8);
+                    
+                    // 配置通道优先级
+                    w.pl().bits(priority as u8);
+                    
+                    // 配置循环模式
+                    match circular_mode {
+                        DmaCircularMode::Disabled => w.circ().clear_bit(),
+                        DmaCircularMode::Enabled => w.circ().set_bit(),
+                    }
+                });
+            },
+            DmaChannel::Channel4 => {
+                dma.ccr4().write(|w| {
+                    // 配置数据传输方向
+                    match direction {
+                        DmaDirection::PeripheralToMemory => w.dir().clear_bit(),
+                        DmaDirection::MemoryToPeripheral => w.dir().set_bit(),
+                        DmaDirection::MemoryToMemory => {
+                            w.dir().set_bit();
+                            w.mem2mem().set_bit()
+                        },
+                    };
+                    
+                    // 配置外设地址增量模式
+                    match peripheral_increment {
+                        DmaPeripheralIncrementMode::Disabled => w.pinc().clear_bit(),
+                        DmaPeripheralIncrementMode::Enabled => w.pinc().set_bit(),
+                    };
+                    
+                    // 配置内存地址增量模式
+                    match memory_increment {
+                        DmaMemoryIncrementMode::Disabled => w.minc().clear_bit(),
+                        DmaMemoryIncrementMode::Enabled => w.minc().set_bit(),
+                    };
+                    
+                    // 配置外设数据宽度
+                    w.psize().bits(peripheral_data_size as u8);
+                    
+                    // 配置内存数据宽度
+                    w.msize().bits(memory_data_size as u8);
+                    
+                    // 配置通道优先级
+                    w.pl().bits(priority as u8);
+                    
+                    // 配置循环模式
+                    match circular_mode {
+                        DmaCircularMode::Disabled => w.circ().clear_bit(),
+                        DmaCircularMode::Enabled => w.circ().set_bit(),
+                    }
+                });
+            },
+            DmaChannel::Channel5 => {
+                dma.ccr5().write(|w| {
+                    // 配置数据传输方向
+                    match direction {
+                        DmaDirection::PeripheralToMemory => w.dir().clear_bit(),
+                        DmaDirection::MemoryToPeripheral => w.dir().set_bit(),
+                        DmaDirection::MemoryToMemory => {
+                            w.dir().set_bit();
+                            w.mem2mem().set_bit()
+                        },
+                    };
+                    
+                    // 配置外设地址增量模式
+                    match peripheral_increment {
+                        DmaPeripheralIncrementMode::Disabled => w.pinc().clear_bit(),
+                        DmaPeripheralIncrementMode::Enabled => w.pinc().set_bit(),
+                    };
+                    
+                    // 配置内存地址增量模式
+                    match memory_increment {
+                        DmaMemoryIncrementMode::Disabled => w.minc().clear_bit(),
+                        DmaMemoryIncrementMode::Enabled => w.minc().set_bit(),
+                    };
+                    
+                    // 配置外设数据宽度
+                    w.psize().bits(peripheral_data_size as u8);
+                    
+                    // 配置内存数据宽度
+                    w.msize().bits(memory_data_size as u8);
+                    
+                    // 配置通道优先级
+                    w.pl().bits(priority as u8);
+                    
+                    // 配置循环模式
+                    match circular_mode {
+                        DmaCircularMode::Disabled => w.circ().clear_bit(),
+                        DmaCircularMode::Enabled => w.circ().set_bit(),
+                    }
+                });
+            },
+            DmaChannel::Channel6 => {
+                dma.ccr6().write(|w| {
+                    // 配置数据传输方向
+                    match direction {
+                        DmaDirection::PeripheralToMemory => w.dir().clear_bit(),
+                        DmaDirection::MemoryToPeripheral => w.dir().set_bit(),
+                        DmaDirection::MemoryToMemory => {
+                            w.dir().set_bit();
+                            w.mem2mem().set_bit()
+                        },
+                    };
+                    
+                    // 配置外设地址增量模式
+                    match peripheral_increment {
+                        DmaPeripheralIncrementMode::Disabled => w.pinc().clear_bit(),
+                        DmaPeripheralIncrementMode::Enabled => w.pinc().set_bit(),
+                    };
+                    
+                    // 配置内存地址增量模式
+                    match memory_increment {
+                        DmaMemoryIncrementMode::Disabled => w.minc().clear_bit(),
+                        DmaMemoryIncrementMode::Enabled => w.minc().set_bit(),
+                    };
+                    
+                    // 配置外设数据宽度
+                    w.psize().bits(peripheral_data_size as u8);
+                    
+                    // 配置内存数据宽度
+                    w.msize().bits(memory_data_size as u8);
+                    
+                    // 配置通道优先级
+                    w.pl().bits(priority as u8);
+                    
+                    // 配置循环模式
+                    match circular_mode {
+                        DmaCircularMode::Disabled => w.circ().clear_bit(),
+                        DmaCircularMode::Enabled => w.circ().set_bit(),
+                    }
+                });
+            },
+            DmaChannel::Channel7 => {
+                dma.ccr7().write(|w| {
+                    // 配置数据传输方向
+                    match direction {
+                        DmaDirection::PeripheralToMemory => w.dir().clear_bit(),
+                        DmaDirection::MemoryToPeripheral => w.dir().set_bit(),
+                        DmaDirection::MemoryToMemory => {
+                            w.dir().set_bit();
+                            w.mem2mem().set_bit()
+                        },
+                    };
+                    
+                    // 配置外设地址增量模式
+                    match peripheral_increment {
+                        DmaPeripheralIncrementMode::Disabled => w.pinc().clear_bit(),
+                        DmaPeripheralIncrementMode::Enabled => w.pinc().set_bit(),
+                    };
+                    
+                    // 配置内存地址增量模式
+                    match memory_increment {
+                        DmaMemoryIncrementMode::Disabled => w.minc().clear_bit(),
+                        DmaMemoryIncrementMode::Enabled => w.minc().set_bit(),
+                    };
+                    
+                    // 配置外设数据宽度
+                    w.psize().bits(peripheral_data_size as u8);
+                    
+                    // 配置内存数据宽度
+                    w.msize().bits(memory_data_size as u8);
+                    
+                    // 配置通道优先级
+                    w.pl().bits(priority as u8);
+                    
+                    // 配置循环模式
+                    match circular_mode {
+                        DmaCircularMode::Disabled => w.circ().clear_bit(),
+                        DmaCircularMode::Enabled => w.circ().set_bit(),
+                    }
+                });
+            },
+        }
     }
     
     /// 配置DMA传输
-    pub unsafe fn configure_transfer(&self, _peripheral_addr: u32, _memory_addr: u32, _data_count: u16) {
-        // 由于内部库中DMA寄存器结构不同，暂时为空实现
+    pub unsafe fn configure_transfer(&self, peripheral_addr: u32, memory_addr: u32, data_count: u16) {
+        let dma = self.get_dma();
+        
+        // 根据通道配置相应的寄存器
+        match self.channel {
+            DmaChannel::Channel1 => {
+                dma.cpar1().write(|w| unsafe { w.bits(peripheral_addr) });
+                dma.cmar1().write(|w| unsafe { w.bits(memory_addr) });
+                dma.cndtr1().write(|w| w.ndt().bits(data_count));
+            },
+            DmaChannel::Channel2 => {
+                dma.cpar2().write(|w| unsafe { w.bits(peripheral_addr) });
+                dma.cmar2().write(|w| unsafe { w.bits(memory_addr) });
+                dma.cndtr2().write(|w| w.ndt().bits(data_count));
+            },
+            DmaChannel::Channel3 => {
+                dma.cpar3().write(|w| unsafe { w.bits(peripheral_addr) });
+                dma.cmar3().write(|w| unsafe { w.bits(memory_addr) });
+                dma.cndtr3().write(|w| w.ndt().bits(data_count));
+            },
+            DmaChannel::Channel4 => {
+                dma.cpar4().write(|w| unsafe { w.bits(peripheral_addr) });
+                dma.cmar4().write(|w| unsafe { w.bits(memory_addr) });
+                dma.cndtr4().write(|w| w.ndt().bits(data_count));
+            },
+            DmaChannel::Channel5 => {
+                dma.cpar5().write(|w| unsafe { w.bits(peripheral_addr) });
+                dma.cmar5().write(|w| unsafe { w.bits(memory_addr) });
+                dma.cndtr5().write(|w| w.ndt().bits(data_count));
+            },
+            DmaChannel::Channel6 => {
+                dma.cpar6().write(|w| unsafe { w.bits(peripheral_addr) });
+                dma.cmar6().write(|w| unsafe { w.bits(memory_addr) });
+                dma.cndtr6().write(|w| w.ndt().bits(data_count));
+            },
+            DmaChannel::Channel7 => {
+                dma.cpar7().write(|w| unsafe { w.bits(peripheral_addr) });
+                dma.cmar7().write(|w| unsafe { w.bits(memory_addr) });
+                dma.cndtr7().write(|w| w.ndt().bits(data_count));
+            },
+        }
     }
     
     /// 启用DMA通道
     pub unsafe fn enable(&self) {
-        // 由于内部库中DMA寄存器结构不同，暂时为空实现
+        let dma = self.get_dma();
+        
+        match self.channel {
+            DmaChannel::Channel1 => { dma.ccr1().modify(|_, w| w.en().set_bit()); },
+            DmaChannel::Channel2 => { dma.ccr2().modify(|_, w| w.en().set_bit()); },
+            DmaChannel::Channel3 => { dma.ccr3().modify(|_, w| w.en().set_bit()); },
+            DmaChannel::Channel4 => { dma.ccr4().modify(|_, w| w.en().set_bit()); },
+            DmaChannel::Channel5 => { dma.ccr5().modify(|_, w| w.en().set_bit()); },
+            DmaChannel::Channel6 => { dma.ccr6().modify(|_, w| w.en().set_bit()); },
+            DmaChannel::Channel7 => { dma.ccr7().modify(|_, w| w.en().set_bit()); },
+        }
     }
     
     /// 禁用DMA通道
     pub unsafe fn disable(&self) {
-        // 由于内部库中DMA寄存器结构不同，暂时为空实现
+        let dma = self.get_dma();
+        
+        match self.channel {
+            DmaChannel::Channel1 => { dma.ccr1().modify(|_, w| w.en().clear_bit()); },
+            DmaChannel::Channel2 => { dma.ccr2().modify(|_, w| w.en().clear_bit()); },
+            DmaChannel::Channel3 => { dma.ccr3().modify(|_, w| w.en().clear_bit()); },
+            DmaChannel::Channel4 => { dma.ccr4().modify(|_, w| w.en().clear_bit()); },
+            DmaChannel::Channel5 => { dma.ccr5().modify(|_, w| w.en().clear_bit()); },
+            DmaChannel::Channel6 => { dma.ccr6().modify(|_, w| w.en().clear_bit()); },
+            DmaChannel::Channel7 => { dma.ccr7().modify(|_, w| w.en().clear_bit()); },
+        }
     }
     
     /// 启用中断
-    pub unsafe fn enable_interrupt(&self, _interrupt: DmaInterrupt) {
-        // 由于内部库中DMA寄存器结构不同，暂时为空实现
+    pub unsafe fn enable_interrupt(&self, interrupt: DmaInterrupt) {
+        let dma = self.get_dma();
+        
+        match self.channel {
+            DmaChannel::Channel1 => {
+                dma.ccr1().modify(|_, w| {
+                    match interrupt {
+                        DmaInterrupt::TransferComplete => w.tcie().set_bit(),
+                        DmaInterrupt::HalfTransfer => w.htie().set_bit(),
+                        DmaInterrupt::TransferError => w.teie().set_bit(),
+                    }
+                });
+            },
+            DmaChannel::Channel2 => {
+                dma.ccr2().modify(|_, w| {
+                    match interrupt {
+                        DmaInterrupt::TransferComplete => w.tcie().set_bit(),
+                        DmaInterrupt::HalfTransfer => w.htie().set_bit(),
+                        DmaInterrupt::TransferError => w.teie().set_bit(),
+                    }
+                });
+            },
+            DmaChannel::Channel3 => {
+                dma.ccr3().modify(|_, w| {
+                    match interrupt {
+                        DmaInterrupt::TransferComplete => w.tcie().set_bit(),
+                        DmaInterrupt::HalfTransfer => w.htie().set_bit(),
+                        DmaInterrupt::TransferError => w.teie().set_bit(),
+                    }
+                });
+            },
+            DmaChannel::Channel4 => {
+                dma.ccr4().modify(|_, w| {
+                    match interrupt {
+                        DmaInterrupt::TransferComplete => w.tcie().set_bit(),
+                        DmaInterrupt::HalfTransfer => w.htie().set_bit(),
+                        DmaInterrupt::TransferError => w.teie().set_bit(),
+                    }
+                });
+            },
+            DmaChannel::Channel5 => {
+                dma.ccr5().modify(|_, w| {
+                    match interrupt {
+                        DmaInterrupt::TransferComplete => w.tcie().set_bit(),
+                        DmaInterrupt::HalfTransfer => w.htie().set_bit(),
+                        DmaInterrupt::TransferError => w.teie().set_bit(),
+                    }
+                });
+            },
+            DmaChannel::Channel6 => {
+                dma.ccr6().modify(|_, w| {
+                    match interrupt {
+                        DmaInterrupt::TransferComplete => w.tcie().set_bit(),
+                        DmaInterrupt::HalfTransfer => w.htie().set_bit(),
+                        DmaInterrupt::TransferError => w.teie().set_bit(),
+                    }
+                });
+            },
+            DmaChannel::Channel7 => {
+                dma.ccr7().modify(|_, w| {
+                    match interrupt {
+                        DmaInterrupt::TransferComplete => w.tcie().set_bit(),
+                        DmaInterrupt::HalfTransfer => w.htie().set_bit(),
+                        DmaInterrupt::TransferError => w.teie().set_bit(),
+                    }
+                });
+            },
+        }
     }
     
     /// 禁用中断
-    pub unsafe fn disable_interrupt(&self, _interrupt: DmaInterrupt) {
-        // 由于内部库中DMA寄存器结构不同，暂时为空实现
+    pub unsafe fn disable_interrupt(&self, interrupt: DmaInterrupt) {
+        let dma = self.get_dma();
+        
+        match self.channel {
+            DmaChannel::Channel1 => {
+                dma.ccr1().modify(|_, w| {
+                    match interrupt {
+                        DmaInterrupt::TransferComplete => w.tcie().clear_bit(),
+                        DmaInterrupt::HalfTransfer => w.htie().clear_bit(),
+                        DmaInterrupt::TransferError => w.teie().clear_bit(),
+                    }
+                });
+            },
+            DmaChannel::Channel2 => {
+                dma.ccr2().modify(|_, w| {
+                    match interrupt {
+                        DmaInterrupt::TransferComplete => w.tcie().clear_bit(),
+                        DmaInterrupt::HalfTransfer => w.htie().clear_bit(),
+                        DmaInterrupt::TransferError => w.teie().clear_bit(),
+                    }
+                });
+            },
+            DmaChannel::Channel3 => {
+                dma.ccr3().modify(|_, w| {
+                    match interrupt {
+                        DmaInterrupt::TransferComplete => w.tcie().clear_bit(),
+                        DmaInterrupt::HalfTransfer => w.htie().clear_bit(),
+                        DmaInterrupt::TransferError => w.teie().clear_bit(),
+                    }
+                });
+            },
+            DmaChannel::Channel4 => {
+                dma.ccr4().modify(|_, w| {
+                    match interrupt {
+                        DmaInterrupt::TransferComplete => w.tcie().clear_bit(),
+                        DmaInterrupt::HalfTransfer => w.htie().clear_bit(),
+                        DmaInterrupt::TransferError => w.teie().clear_bit(),
+                    }
+                });
+            },
+            DmaChannel::Channel5 => {
+                dma.ccr5().modify(|_, w| {
+                    match interrupt {
+                        DmaInterrupt::TransferComplete => w.tcie().clear_bit(),
+                        DmaInterrupt::HalfTransfer => w.htie().clear_bit(),
+                        DmaInterrupt::TransferError => w.teie().clear_bit(),
+                    }
+                });
+            },
+            DmaChannel::Channel6 => {
+                dma.ccr6().modify(|_, w| {
+                    match interrupt {
+                        DmaInterrupt::TransferComplete => w.tcie().clear_bit(),
+                        DmaInterrupt::HalfTransfer => w.htie().clear_bit(),
+                        DmaInterrupt::TransferError => w.teie().clear_bit(),
+                    }
+                });
+            },
+            DmaChannel::Channel7 => {
+                dma.ccr7().modify(|_, w| {
+                    match interrupt {
+                        DmaInterrupt::TransferComplete => w.tcie().clear_bit(),
+                        DmaInterrupt::HalfTransfer => w.htie().clear_bit(),
+                        DmaInterrupt::TransferError => w.teie().clear_bit(),
+                    }
+                });
+            },
+        }
     }
     
     /// 检查中断标志
@@ -155,19 +630,51 @@ impl Dma {
     pub unsafe fn clear_interrupt(&self, interrupt: DmaInterrupt) {
         let dma = self.get_dma();
         let channel_offset = self.channel as u32 * 4;
-        dma.ifcr().write(|w: &mut library::dma1::ifcr::W| unsafe { w.bits((interrupt as u32) << channel_offset) });
+        dma.ifcr().write(|w| unsafe { w.bits((interrupt as u32) << channel_offset) });
     }
     
     /// 获取剩余数据计数
     pub unsafe fn get_remaining_count(&self) -> u16 {
-        // 由于内部库中DMA寄存器结构不同，暂时返回固定值
-        0
+        let dma = self.get_dma();
+        
+        match self.channel {
+            DmaChannel::Channel1 => dma.cndtr1().read().ndt().bits(),
+            DmaChannel::Channel2 => dma.cndtr2().read().ndt().bits(),
+            DmaChannel::Channel3 => dma.cndtr3().read().ndt().bits(),
+            DmaChannel::Channel4 => dma.cndtr4().read().ndt().bits(),
+            DmaChannel::Channel5 => dma.cndtr5().read().ndt().bits(),
+            DmaChannel::Channel6 => dma.cndtr6().read().ndt().bits(),
+            DmaChannel::Channel7 => dma.cndtr7().read().ndt().bits(),
+        }
     }
     
     /// 检查DMA通道是否正在传输
     pub unsafe fn is_transferring(&self) -> bool {
-        // 由于内部库中DMA寄存器结构不同，暂时返回固定值
-        false
+        let dma = self.get_dma();
+        
+        match self.channel {
+            DmaChannel::Channel1 => {
+                dma.ccr1().read().en().bit_is_set() && dma.cndtr1().read().ndt().bits() > 0
+            },
+            DmaChannel::Channel2 => {
+                dma.ccr2().read().en().bit_is_set() && dma.cndtr2().read().ndt().bits() > 0
+            },
+            DmaChannel::Channel3 => {
+                dma.ccr3().read().en().bit_is_set() && dma.cndtr3().read().ndt().bits() > 0
+            },
+            DmaChannel::Channel4 => {
+                dma.ccr4().read().en().bit_is_set() && dma.cndtr4().read().ndt().bits() > 0
+            },
+            DmaChannel::Channel5 => {
+                dma.ccr5().read().en().bit_is_set() && dma.cndtr5().read().ndt().bits() > 0
+            },
+            DmaChannel::Channel6 => {
+                dma.ccr6().read().en().bit_is_set() && dma.cndtr6().read().ndt().bits() > 0
+            },
+            DmaChannel::Channel7 => {
+                dma.ccr7().read().en().bit_is_set() && dma.cndtr7().read().ndt().bits() > 0
+            },
+        }
     }
 }
 
